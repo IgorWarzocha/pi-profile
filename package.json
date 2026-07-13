@@ -3,9 +3,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "scan": "node src/cli.js scan",
-    "analyze": "node src/cli.js analyze",
-    "aggregate": "node src/cli.js aggregate"
+    "aggregate": "node src/server-aggregate.js",
+    "deploy": "cd capsule && npx lakebed deploy",
+    "publish": "npm run aggregate && npm run deploy",
+    "test": "node --test"
   },
   "engines": { "node": ">=20" }
 }

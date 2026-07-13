@@ -1,2 +1,6 @@
 data/*.json
+capsule/.lakebed/
+capsule/shared/default-profile.ts
 node_modules/
+
+.pi/
