@@ -111,6 +111,17 @@ npm run claim:staging
 
 Staging addresses end in `.staging.lakebed.app`.
 
+## Automatic refreshes
+
+The repository deliberately does not install a scheduler. Run the publish command on a timer as the same Linux account that owns the SSH keys and Lakebed login:
+
+```bash
+cd /absolute/path/to/pi-profile && npm run publish
+# or: npm run publish:staging
+```
+
+Cron and systemd timers both work. Choose the cadence you want and prevent overlapping runs; each publish scans every configured machine before updating Lakebed.
+
 ## Machine configurations
 
 ### One machine
