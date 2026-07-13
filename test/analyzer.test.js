@@ -21,3 +21,16 @@ test("recognises DevRagio profanity variants", () => {
   const result = analyzeText("what the fuck, this is a shitshow and wtf");
   assert.equal(result.friction.profanity, 3);
 });
+
+test("recognises exasperation and dismissal without profanity", () => {
+  const result = analyzeText("seriously, how many times? nobody cares — this is pointless");
+  assert.equal(result.friction.exasperation, 2);
+  assert.equal(result.friction.dismissal, 2);
+  assert.equal(result.friction.profanity, 0);
+});
+
+test("does not treat neutral choice and scheduling language as rage", () => {
+  const result = analyzeText("whatever works; I don't care which implementation; this helper is not needed; seriously consider this and come on Tuesday");
+  assert.equal(result.friction.exasperation, 0);
+  assert.equal(result.friction.dismissal, 0);
+});

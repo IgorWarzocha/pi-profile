@@ -37,13 +37,13 @@ export function App() {
           <img src={p.profile.avatarUrl} alt="" className="h-20 w-20 shrink-0 rounded-full border border-white/10 object-cover shadow-[inset_0_1px_0_rgba(255,255,255,.08)]" />
           <div className="min-w-0"><h1 className="text-4xl font-semibold tracking-[-.045em] sm:text-5xl">{p.profile.name}</h1><SocialLinks profile={p.profile} /></div>
         </div>
-        <div className="sm:text-right"><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.24em] text-white/45 sm:justify-end"><PiMark /> Pi profile</div><div className="mt-2 flex items-center gap-2 text-xs text-white/35 sm:justify-end"><span className="h-1.5 w-1.5 rounded-full bg-[#80d49c] shadow-[0_0_10px_#80d49c]" /> synced {relativeTime(p.generatedAt)}</div></div>
+        <div className="sm:text-right"><div className="text-xs font-semibold uppercase tracking-[.24em] text-white/45">Pi profile</div><div className="mt-2 flex items-center gap-2 text-xs text-white/35 sm:justify-end"><span className="h-1.5 w-1.5 rounded-full bg-[#80d49c] shadow-[0_0_10px_#80d49c]" /> synced {relativeTime(p.generatedAt)}</div></div>
       </header>
 
       <section aria-label="Profile highlights" className="mt-8 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/[.08] bg-[#111414] lg:grid-cols-4">
         <HeroStat label="Lifetime tokens" value={compact(p.headline.lifetimeTokens)} detail={`${compact(t.outputTokens)} output`} />
         <HeroStat label="Cache read" value={percent(t.cacheReadShare)} detail={`${compact(t.cacheReadTokens)} cached`} />
-        <HeroStat label="Reported cost" value={money(t.cost)} />
+        <HeroStat label="Reported cost" value={money(t.cost)} detail={`${money(t.cost / Math.max(t.sessions, 1), 2)} per session`} />
         <HeroStat label="Current streak" value={`${p.headline.currentStreak} days`} detail={`${p.headline.longestStreak} day record`} />
       </section>
 
@@ -51,7 +51,7 @@ export function App() {
         <SectionHeading title="Activity" aside={<MetricTabs value={heatMetric} onChange={setHeatMetric} />} />
         <div className="rounded-2xl border border-white/[.08] bg-[#111414] p-5 sm:p-7">
           <Heatmap daily={p.daily} metric={heatMetric} />
-          <div className="mt-6 grid gap-x-6 gap-y-5 border-t border-white/[.07] pt-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+          <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-5 border-t border-white/[.07] pt-6 md:grid-cols-6 md:gap-x-3 xl:gap-x-6">
             <InlineStat label="Sessions" value={integer(t.sessions)} note={`${integer(t.activeDays)} active days`} />
             <InlineStat label="Active time" value={duration(t.activeDurationMs)} note="estimated" />
             <InlineStat label="Messages" value={integer(t.userMessages + t.assistantMessages)} note={`${integer(t.userMessages)} prompts`} />
@@ -99,26 +99,26 @@ function DetailsLoading() { return <section className="mt-12 grid gap-5 lg:grid-
 function ProfileDetails({ profile: p }: { profile: Profile }) {
   const t = p.totals;
   return <div className="details-enter">
-      <section className="mt-12 grid gap-5 lg:grid-cols-3">
-        <div className="min-w-0">
+      <section className="mt-12 grid items-stretch gap-5 lg:grid-cols-3">
+        <div className="flex min-w-0 flex-col">
           <SectionHeading title="Models" />
-          <div className="overflow-hidden rounded-2xl border border-white/[.08] bg-[#111414]">
+          <div className="flex-1 overflow-hidden rounded-2xl border border-white/[.08] bg-[#111414] lg:min-h-[400px]">
             <div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b border-white/[.07] px-5 py-3 text-[10px] font-semibold uppercase tracking-[.16em] text-white/30"><span>Model</span><span>Sessions</span><span className="w-20 text-right">Tokens</span></div>
             {p.models.slice(0, 6).map((model, i) => <ModelRow key={model.modelId} model={model} total={t.totalTokens} last={i === Math.min(p.models.length, 6) - 1} />)}
           </div>
         </div>
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col">
           <SectionHeading title="Machines" />
-          <div className="rounded-2xl border border-white/[.08] bg-[#111414] p-5">
+          <div className="flex flex-1 flex-col rounded-2xl border border-white/[.08] bg-[#111414] p-5 lg:min-h-[400px]">
             {p.machines.map((machine) => <Machine key={machine.machine} machine={machine} />)}
-            <div className="mt-5 grid grid-cols-2 gap-4 border-t border-white/[.07] pt-4"><Mini label="Sessions" value={integer(t.sessions)} /><Mini label="Active days" value={integer(t.activeDays)} /></div>
+            <div className="mt-auto grid grid-cols-2 gap-4 border-t border-white/[.07] pt-4"><Mini label="Sessions" value={integer(t.sessions)} /><Mini label="Active days" value={integer(t.activeDays)} /></div>
           </div>
         </div>
-        <div className="min-w-0">
+        <div className="flex min-w-0 flex-col">
           <SectionHeading title="Tools" />
-          <div className="rounded-2xl border border-white/[.08] bg-[#111414] p-5">
-            <Bars values={Object.fromEntries(p.tools.slice(0, 6).map((tool) => [tool.name, tool.calls]))} accent="#f4ca73" />
-            <div className="mt-5 flex gap-6 border-t border-white/[.07] pt-4"><Mini label="Results" value={integer(t.toolResults)} /><Mini label="Errors" value={integer(t.toolErrors)} /><Mini label="Compactions" value={integer(t.compactions)} /></div>
+          <div className="flex flex-1 flex-col rounded-2xl border border-white/[.08] bg-[#111414] p-5 lg:min-h-[400px]">
+            <Bars values={Object.fromEntries(p.tools.slice(0, 9).map((tool) => [tool.name, tool.calls]))} accent="#f4ca73" />
+            <div className="mt-auto flex gap-6 border-t border-white/[.07] pt-4"><Mini label="Results" value={integer(t.toolResults)} /><Mini label="Errors" value={integer(t.toolErrors)} /><Mini label="Compactions" value={integer(t.compactions)} /></div>
           </div>
         </div>
       </section>
@@ -142,9 +142,7 @@ function ProfileDetails({ profile: p }: { profile: Profile }) {
 
       <section className="mt-12">
         <SectionHeading title="Recent sessions" />
-        <div className="overflow-hidden rounded-2xl border border-white/[.08] bg-[#111414]">
-          {p.recentSessions.map((session, i) => <SessionRow key={`${session.startedAt}-${session.project}-${i}`} session={session} last={i === p.recentSessions.length - 1} />)}
-        </div>
+        <div tabIndex={0} aria-label="Recent sessions table" className="overflow-x-auto rounded-2xl border border-white/[.08] bg-[#111414] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8eb7ff]/50"><div className="min-w-[780px]">{p.recentSessions.map((session, i) => <SessionRow key={`${session.startedAt}-${session.project}-${i}`} session={session} last={i === p.recentSessions.length - 1} />)}</div></div>
       </section>
 
     </div>;
@@ -175,7 +173,7 @@ function SocialLinks({ profile }: { profile: Profile["profile"] }) {
   return <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/40">{links.map(({ href, label, icon }) => <a key={href} href={href} target="_blank" rel="noreferrer" aria-label={label} title={label} className="inline-flex h-5 items-center transition hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8eb7ff]/50">{icon ? <SocialIcon name={icon} /> : label}</a>)}</div>;
 }
 function HeroStat({ label, value, detail }: { label: string; value: string; detail?: string }) { return <div className="border-b border-white/[.07] p-5 last:border-b-0 [&:nth-child(odd)]:border-r [&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"><div className="text-2xl font-medium tabular-nums tracking-[-.035em]">{value}</div><div className="mt-1 text-sm text-white/55">{label}</div>{detail && <div className="mt-3 truncate text-[11px] text-white/25">{detail}</div>}</div>; }
-function InlineStat({ label, value, note }: { label: string; value: string; note: string }) { return <div><div className="text-[10px] font-semibold uppercase tracking-[.18em] text-white/30">{label}</div><div className="mt-1 text-2xl tracking-tight">{value}</div><div className="mt-1 text-xs text-white/30">{note}</div></div>; }
+function InlineStat({ label, value, note }: { label: string; value: string; note: string }) { return <div className="min-w-0"><div className="truncate text-[10px] font-semibold uppercase tracking-[.18em] text-white/30 md:text-[9px] md:tracking-[.1em] xl:text-[10px] xl:tracking-[.18em]">{label}</div><div className="mt-1 truncate text-xl tabular-nums tracking-tight md:text-[clamp(1rem,2vw,1.5rem)] xl:text-2xl">{value}</div><div className="mt-1 truncate text-[11px] text-white/30 xl:text-xs">{note}</div></div>; }
 function SectionHeading({ title, aside }: { title: any; aside?: any }) { return <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><h2 className="text-xl font-medium tracking-[-.025em]">{title}</h2>{aside}</div>; }
 function InsightRow({ label, value, meta, color, last }: { label: string; value: string; meta: string; color: string; last?: boolean }) { return <div className={`grid grid-cols-[8px_minmax(130px,.6fr)_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5 ${last ? "" : "border-b border-white/[.07]"}`}><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} /><span className="text-xs text-white/35">{label}</span><span className="truncate text-sm">{value}</span><span className="text-xs text-white/35">{meta}</span></div>; }
 function Machine({ machine }: { machine: Profile["machines"][number] }) { return <div className="flex items-center justify-between border-b border-white/[.07] px-1 py-4 last:border-0"><div className="flex items-center gap-3"><span className={`h-2 w-2 rounded-full ${machine.ok ? "bg-[#80d49c]" : "bg-[#ef8f77]"}`} /><div className="text-sm capitalize">{machine.machine}</div></div><div className="font-mono text-sm text-white/55">{machine.ok ? `${integer(machine.sourceSessions)} sessions` : "offline"}</div></div>; }
@@ -184,8 +182,7 @@ function ModelRow({ model, total, last }: { model: Profile["models"][number]; to
 function Bars({ values, accent }: { values: NumberMap; accent: string }) { const entries = Object.entries(values); const max = Math.max(...entries.map(([, v]) => v), 1); return <div className="space-y-3">{entries.map(([name, value]) => <div key={name}><div className="mb-1.5 flex justify-between gap-4 text-xs"><span className="truncate text-white/55">{titleCase(name)}</span><span className="font-mono text-white/35">{integer(value)}</span></div><div className="h-1 rounded bg-white/[.05]"><div className="h-full rounded" style={{ width: `${value / max * 100}%`, backgroundColor: accent }} /></div></div>)}</div>; }
 function Mini({ label, value }: { label: string; value: string }) { return <div><div className="text-[10px] uppercase tracking-wider text-white/25">{label}</div><div className="mt-1 font-mono text-sm text-white/65">{value}</div></div>; }
 function SignalCard({ title, count, messageCount, values, accent }: { title: string; count: number; messageCount: number; values?: NumberMap; accent: string }) { return <article className="rounded-2xl border border-white/[.08] bg-[#111414] p-5"><div className="flex items-baseline justify-between"><h3 className="font-medium">{title}</h3><span className="font-mono text-2xl" style={{ color: accent }}>{integer(count)}</span></div><div className="my-5 h-px bg-white/[.07]" /><Bars values={values ?? {}} accent={accent} /><div className="mt-5 text-[11px] text-white/25">{(count / Math.max(messageCount, 1) * 100).toFixed(1)} per 100 messages</div></article>; }
-function SessionRow({ session, last }: { session: Profile["recentSessions"][number]; last: boolean }) { return <div className={`grid gap-3 px-5 py-4 sm:grid-cols-[1fr_auto] sm:items-center ${last ? "" : "border-b border-white/[.06]"}`}><div className="min-w-0"><div className="flex items-center gap-2"><span className="truncate text-sm">{session.project}</span><span className="shrink-0 rounded-full border border-white/[.08] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/30">{session.machine}</span></div><div className="mt-1 truncate text-xs text-white/30">{prettyModel(session.model ?? "unknown")} · {relativeTime(session.endedAt)}</div></div><div className="flex gap-4 text-xs text-white/35"><span>{session.messages} msgs</span><span>{session.toolCalls} tools</span><span>{compact(session.tokens)} tok</span><span>{duration(session.activeDurationMs)}</span></div></div>; }
-function PiMark() { return <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 3.5h10M4.5 3.5v7M9.5 3.5v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" /></svg>; }
+function SessionRow({ session, last }: { session: Profile["recentSessions"][number]; last: boolean }) { return <div className={`grid grid-cols-[minmax(170px,1fr)_minmax(180px,.8fr)_auto_auto_auto_auto] items-center gap-4 px-5 py-3 text-xs ${last ? "" : "border-b border-white/[.06]"}`}><div className="flex min-w-0 items-center gap-2"><span className="truncate text-sm">{session.project}</span><span className="shrink-0 rounded-full border border-white/[.08] px-2 py-0.5 text-[9px] uppercase tracking-wider text-white/30">{session.machine}</span></div><span className="truncate text-white/30">{prettyModel(session.model ?? "unknown")} · {relativeTime(session.endedAt)}</span><span className="whitespace-nowrap text-white/35">{session.messages} msgs</span><span className="whitespace-nowrap text-white/35">{session.toolCalls} tools</span><span className="whitespace-nowrap text-white/35">{compact(session.tokens)} tok</span><span className="whitespace-nowrap text-white/35">{duration(session.activeDurationMs)}</span></div>; }
 function SocialIcon({ name }: { name: string }) {
   if (name === "x") return <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24h-6.657l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" /></svg>;
   if (name === "github") return <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.97 10.97 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>;
@@ -199,7 +196,7 @@ function metricLabel(metric: HeatMetric) { return metric === "friction" ? "Rage"
 function compact(value = 0) { const abs = Math.abs(value); return abs >= 1e9 ? `${(value / 1e9).toFixed(2)}B` : abs >= 1e6 ? `${(value / 1e6).toFixed(1)}M` : abs >= 1e3 ? `${(value / 1e3).toFixed(1)}K` : integer(value); }
 function integer(value = 0) { return Math.round(value).toLocaleString(); }
 function percent(value = 0) { return `${(value * 100).toFixed(value >= .1 ? 1 : 2)}%`; }
-function money(value = 0) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(value); }
+function money(value = 0, digits = 0) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value); }
 function duration(ms = 0) { if (!ms) return "0m"; const mins = Math.round(ms / 60000); if (mins < 60) return `${mins}m`; const hours = Math.floor(mins / 60), rem = mins % 60; if (hours < 24) return `${hours}h ${rem}m`; return `${Math.floor(hours / 24)}d ${hours % 24}h`; }
 function prettyDate(value?: string) { if (!value) return "—"; return new Date(`${value.slice(0, 10)}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: value.slice(0,4) === new Date().getUTCFullYear().toString() ? undefined : "numeric", timeZone: "UTC" }); }
 function relativeTime(value: string) { const seconds = Math.max(0, (Date.now() - Date.parse(value)) / 1000); if (seconds < 90) return "just now"; if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`; if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`; if (seconds < 86400 * 30) return `${Math.floor(seconds / 86400)}d ago`; return prettyDate(value); }

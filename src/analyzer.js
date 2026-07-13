@@ -19,6 +19,8 @@ const PATTERNS = {
     correction: /\b(?:no[,.! ]+(?:that|this|you|i|we)|wrong|that(?:'|’)s\s+not|not\s+what\s+i|you\s+(?:didn(?:'|’)t|haven(?:'|’)t|never)|do\s+it\s+again|start\s+again|stop\s+(?:doing|adding|trying))\b/gi,
     stuck: /\b(?:i(?:'|’)m\s+stuck|i(?:'|’)m\s+confused|this\s+makes\s+no\s+sense|why\s+is\s+this\s+happening|what\s+the\s+hell)\b/gi,
     urgency: /\b(?:just\s+do\s+it|right\s+now|immediately|asap|for\s+the\s+last\s+time)\b/gi,
+    exasperation: /\b(?:seriously(?=\s*(?:[,.!?]|$))|come\s+on(?=\s*(?:[,.!?]|$))|ffs|are\s+you\s+(?:kidding|serious)|how\s+many\s+times|here\s+we\s+go\s+again|not\s+again|this\s+is\s+(?:ridiculous|absurd))\b/gi,
+    dismissal: /\b(?:i\s+don(?:'|’)t\s+care(?!\s+(?:which|what|how|whether|where|who)\b)|who\s+cares|nobody\s+cares|whatever(?=\s*(?:[,.!?]|$))|forget\s+it|don(?:'|’)t\s+bother|this\s+is\s+(?:pointless|useless)|waste\s+of\s+time|completely\s+irrelevant)\b/gi,
     profanity: /\b(?:f+u+c+k+(?:ing|ed|er|s|up|off|wit|tard|face|head)?|motherf+u+c+k+(?:er|ing)?|clusterf+u+c+k+|fukc(?:ing|ed|er)?|fcuk(?:ing|ed)?|sh+i+t+(?:ty|ting|ted|s|show|head|hole|face|stain|bag)?|bullsh+i+t+|horsesh+i+t+|dipsh+i+t+|hsit|siht|shti|ass(?:es|hole|holes|hat|wipe)?|jackass|dumbass|badass|damn(?:ed|it)?|dammit|goddamn(?:it)?|bitch(?:es|ing|y|ass)?|bastards?|piss(?:ed|ing|off)?|dick(?:head)?|crap(?:py|ping)?|hell|wtf|stfu|lmao|lmfao|cunts?)\b/gi,
   },
 };
