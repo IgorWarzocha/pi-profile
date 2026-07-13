@@ -34,6 +34,7 @@ You can use one machine, two machines, different hostnames, or different session
 ```bash
 git clone https://github.com/IgorWarzocha/pi-profile.git
 cd pi-profile
+npm ci
 ```
 
 Edit `profile.config.js` with your identity and machines:
@@ -68,6 +69,16 @@ ssh desktop 'find ~/.pi/agent/sessions -name "*.jsonl" | head'
 ssh laptop  'find ~/.pi/agent/sessions -name "*.jsonl" | head'
 ```
 
+Build and inspect the profile locally before publishing:
+
+```bash
+npm test
+npm run aggregate
+npm run preview
+```
+
+Open the local URL printed by Lakebed. A fresh clone must run `npm run aggregate` before any Lakebed build, preview, or deploy because the profile snapshots are generated and intentionally absent from Git.
+
 ## Publish
 
 ```bash
@@ -88,8 +99,17 @@ The generated data files are ignored by Git.
 An anonymous Lakebed deployment expires after seven days. Run this from `capsule/` to attach it to your Lakebed account:
 
 ```bash
-npx lakebed claim
+npm run claim
 ```
+
+If you deploy with Lakebed's staging channel, keep that channel consistent for deploy and claim:
+
+```bash
+npm run publish:staging
+npm run claim:staging
+```
+
+Staging addresses end in `.staging.lakebed.app`.
 
 ## Machine configurations
 
@@ -159,6 +179,8 @@ Daily activity uses event timestamps in UTC. Session totals remain exact even wh
 ```bash
 npm test          # parser and analyzer tests
 npm run aggregate # refresh local data and the capsule snapshot
+npm run build     # verify the generated capsule
+npm run preview   # inspect it locally
 npm run deploy    # deploy the existing snapshot
 ```
 

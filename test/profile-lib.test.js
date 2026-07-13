@@ -49,3 +49,11 @@ test("counts native web and image calls as tools", () => {
   assert.equal(session.tools.web_search.calls, 1);
   assert.equal(session.tools.image_generation.calls, 1);
 });
+
+test("does not retain user-authored session titles", () => {
+  const state = createStreamState("server");
+  ingestLine(state, line({ type: "session", id: "private-title", timestamp: "2026-07-01T10:00:00Z", cwd: "/work/example" }));
+  ingestLine(state, line({ type: "session_info", timestamp: "2026-07-01T10:00:01Z", name: "Sensitive session title" }));
+  const session = finalizeStream(state)[0];
+  assert.equal("name" in session, false);
+});

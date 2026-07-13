@@ -166,9 +166,9 @@ function MetricTabs({ value, onChange }: { value: HeatMetric; onChange: (metric:
 function SocialLinks({ profile }: { profile: Profile["profile"] }) {
   const links = [
     { href: profile.links.x, label: `X ${profile.handle}`, icon: "x" },
-    { href: profile.links.github, label: "GitHub @IgorWarzocha", icon: "github" },
-    { href: profile.links.linkedin, label: "LinkedIn igorwarzocha", icon: "linkedin" },
-    { href: profile.links.website, label: "howaboua.dev" },
+    { href: profile.links.github, label: "GitHub", icon: "github" },
+    { href: profile.links.linkedin, label: "LinkedIn", icon: "linkedin" },
+    { href: profile.links.website, label: displayHost(profile.links.website) },
   ];
   return <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/40">{links.map(({ href, label, icon }) => <a key={href} href={href} target="_blank" rel="noreferrer" aria-label={label} title={label} className="inline-flex h-5 items-center transition hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8eb7ff]/50">{icon ? <SocialIcon name={icon} /> : label}</a>)}</div>;
 }
@@ -202,6 +202,7 @@ function prettyDate(value?: string) { if (!value) return "—"; return new Date(
 function relativeTime(value: string) { const seconds = Math.max(0, (Date.now() - Date.parse(value)) / 1000); if (seconds < 90) return "just now"; if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`; if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`; if (seconds < 86400 * 30) return `${Math.floor(seconds / 86400)}d ago`; return prettyDate(value); }
 function prettyModel(value: string) { return value === "unknown" ? "Unknown model" : value.replace(/[-_]/g, " ").replace(/\b(?:gpt|glm|ai)\b/gi, (m) => m.toUpperCase()).replace(/\b\w/g, (m) => m.toUpperCase()); }
 function titleCase(value: string) { return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/[-_]/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()); }
+function displayHost(value: string) { try { return new URL(value).hostname.replace(/^www\./, ""); } catch { return value; } }
 function sumMap(map: NumberMap) { return Object.values(map ?? {}).reduce((sum, value) => sum + value, 0); }
 
 const styles = `

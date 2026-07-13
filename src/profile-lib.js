@@ -24,7 +24,6 @@ export function ingestLine(state, line) {
   const timestamp = eventTime(entry);
   updateTime(session, timestamp);
 
-  if (entry.type === "session_info" && entry.name) session.name = entry.name;
   if (entry.type === "model_change" && entry.modelId) touchModel(session, entry.modelId, entry.provider);
   if (entry.type === "thinking_level_change" && entry.thinkingLevel) increment(session.reasoningLevels, entry.thinkingLevel);
   if (entry.type === "compaction") {
@@ -156,7 +155,7 @@ export function buildProfile(sessions, collections, options = {}) {
 function createSession(entry, machine) {
   const startedAt = entry.timestamp ?? new Date(0).toISOString();
   return {
-    sessionId: entry.id, machine, startedAt, endedAt: startedAt, cwd: entry.cwd, projectKey: displayProject(entry.cwd).toLowerCase(), projectName: displayProject(entry.cwd), name: null,
+    sessionId: entry.id, machine, startedAt, endedAt: startedAt, cwd: entry.cwd, projectKey: displayProject(entry.cwd).toLowerCase(), projectName: displayProject(entry.cwd),
     observedDurationMs: 0, activeDurationMs: 0, previousEventMs: Date.parse(startedAt),
     counts: { events: 0, userMessages: 0, assistantMessages: 0, toolCalls: 0, toolResults: 0, toolErrors: 0, thinkingParts: 0, imageParts: 0, compactions: 0 },
     usage: zeroUsage(), models: {}, tools: {}, reasoningLevels: {}, language: {}, daily: { [startedAt.slice(0, 10)]: zeroDaily() }, maxTokensBeforeCompaction: 0,
