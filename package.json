@@ -8,7 +8,7 @@
   "scripts": {
     "aggregate": "node src/server-aggregate.js",
     "dev": "vinext dev",
-    "build": "vinext build",
+    "build": "vinext build && node src/prepare-sites-output.js",
     "start": "vinext start",
     "typecheck": "tsc --noEmit",
     "check": "npm test && npm run typecheck && npm run build",
