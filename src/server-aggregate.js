@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { buildProfile, createStreamState, dedupeSessions, finalizeStream, ingestLine } from "./profile-lib.js";
+import { assertPublicProfile } from "./public-profile.js";
 import config from "../profile.config.js";
 
 const root = new URL("..", import.meta.url).pathname;
@@ -37,7 +38,7 @@ const failed = collections.filter((collection) => !collection.ok);
 if (failed.length && process.env.PI_ALLOW_PARTIAL !== "1") throw new Error(`Refusing to publish a partial profile; unavailable: ${failed.map((item) => item.machine).join(", ")}`);
 const machineOrder = machines.map(({ machine }) => machine);
 const sessions = dedupeSessions(collections, machineOrder);
-const profile = buildProfile(sessions, collections, { machineOrder, profile: config.profile });
+const profile = assertPublicProfile(buildProfile(sessions, collections, { machineOrder, profile: config.profile }));
 const overviewDaily = Object.fromEntries(Object.entries(profile.daily).sort(([left], [right]) => left.localeCompare(right)).slice(-371));
 const overview = {
   generatedAt: profile.generatedAt,
@@ -53,10 +54,10 @@ const overview = {
 };
 
 await mkdir(`${root}data`, { recursive: true });
-await mkdir(`${root}capsule/shared`, { recursive: true });
+await mkdir(`${root}app/generated`, { recursive: true });
 await writeFile(`${root}data/profile.json`, JSON.stringify({ ...profile, sessions }, null, 2));
-await writeFile(`${root}capsule/shared/default-profile.ts`, `export const DEFAULT_PROFILE = ${JSON.stringify(profile)} as const;\n`);
-await writeFile(`${root}capsule/shared/profile-overview.ts`, `export const PROFILE_OVERVIEW = ${JSON.stringify(overview)} as const;\n`);
+await writeFile(`${root}app/generated/profile.ts`, `import type { Profile } from "../profile-types";\n\nexport const DEFAULT_PROFILE = ${JSON.stringify(profile)} as const satisfies Profile;\n`);
+await writeFile(`${root}app/generated/profile-overview.ts`, `import type { Overview } from "../profile-types";\n\nexport const PROFILE_OVERVIEW = ${JSON.stringify(overview)} as const satisfies Overview;\n`);
 
 console.log(JSON.stringify({
   machines: profile.machines,

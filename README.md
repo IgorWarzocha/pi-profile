@@ -1,10 +1,10 @@
 # Pi Profile
 
-A personal activity profile built from [Pi](https://github.com/badlogic/pi-mono) session logs and displayed with [Lakebed](https://lakebed.dev).
+A personal activity profile built from [Pi](https://github.com/badlogic/pi-mono) session logs and hosted with [ChatGPT Sites](https://developers.openai.com/codex/sites).
 
-It combines sessions from several machines, removes synced duplicates, and shows token activity, cache use, cost, streaks, projects, models, tools, and language patterns.
+It combines sessions from several machines, removes synced duplicates, and shows token activity, cache use, cost, streaks, projects, models, tools, and language patterns. Collection happens locally; the deployed Site contains only compact generated snapshots.
 
-## The specific setup this was built for
+## The setup this was built for
 
 The collector runs on one always-on Linux server. That server reads its own Pi sessions directly and reads two other machines over SSH:
 
@@ -24,16 +24,17 @@ You can use one machine, two machines, different hostnames, or different session
 
 ## Requirements
 
-- Node.js 20 or newer
+- Node.js 22.12 or newer
 - Pi session logs
 - SSH key access for remote machines
-- A Lakebed account for a permanent deployment; anonymous previews also work
+- ChatGPT Sites access for hosting
 
 ## Set up
 
 ```bash
 git clone https://github.com/IgorWarzocha/pi-profile.git
 cd pi-profile
+npm install
 ```
 
 Edit `profile.config.js` with your identity and machines:
@@ -61,39 +62,48 @@ export default {
 
 `host: null` means the collector's current machine. Any other value is passed to `ssh`, so it may be an SSH alias, hostname, user-qualified host, or IP address.
 
-Test remote access before publishing:
+Test remote access before generating a profile:
 
 ```bash
 ssh desktop 'find ~/.pi/agent/sessions -name "*.jsonl" | head'
-ssh laptop  'find ~/.pi/agent/sessions -name "*.jsonl" | head'
+ssh laptop 'find ~/.pi/agent/sessions -name "*.jsonl" | head'
 ```
 
-## Publish
+## Generate and preview
 
 ```bash
-npm run publish
+npm run aggregate
+npm run check
+npm run dev
 ```
 
-That command:
+Aggregation:
 
-1. Streams Pi JSONL from every configured machine.
-2. Parses it in memory on the collector machine.
-3. Deduplicates exact session IDs in the order listed in `profile.config.js`.
-4. Writes the full normalized local result to `data/profile.json`.
-5. Generates an instant overview and a deferred detail snapshot for Lakebed.
-6. Deploys the capsule.
+1. streams Pi JSONL from every configured machine;
+2. parses it in memory on the collector machine;
+3. deduplicates exact session IDs in configured machine order;
+4. writes the full normalized result to ignored `data/profile.json`;
+5. writes compact, deployable snapshots to tracked `app/generated/` files.
 
-The generated data files are ignored by Git.
+The Site build never connects to your machines. It builds entirely from the committed snapshots.
 
-An anonymous Lakebed deployment expires after seven days. Run this from `capsule/` to attach it to your Lakebed account:
+## Save and deploy with ChatGPT Sites
 
-```bash
-npx lakebed claim
-```
+After refreshing the profile:
+
+1. review changes under `app/generated/`;
+2. run `npm run check`;
+3. commit the source and snapshots;
+4. save a reviewable Sites version;
+5. deploy that saved version only after reviewing it.
+
+`.openai/hosting.json` links the repository to its Site. Sites assigns `project_id` when the hosted project is created; do not invent or copy one from another Site. Saving and deploying are separate operations, and every deployment URL is production.
 
 ## Machine configurations
 
-### One machine
+Machine order is deduplication priority. When the same session exists on several machines, the first configured copy wins. If one machine cannot be read, aggregation stops rather than replacing lifetime totals with a partial profile. Set `PI_ALLOW_PARTIAL=1` only when a partial snapshot is deliberate.
+
+One machine:
 
 ```js
 machines: [
@@ -101,7 +111,7 @@ machines: [
 ]
 ```
 
-### Remote server collecting a workstation
+Remote collector:
 
 ```js
 machines: [
@@ -109,16 +119,6 @@ machines: [
   { name: "workstation", host: "igor@192.168.1.20", sessionsDir: "~/.pi/agent/sessions" },
 ]
 ```
-
-### Different session location
-
-```js
-machines: [
-  { name: "archive", host: "archive-box", sessionsDir: "/srv/pi/sessions" },
-]
-```
-
-Machine order is significant. When the same session exists on several machines, the first configured copy wins. If one machine cannot be read, publishing stops rather than replacing lifetime totals with a partial profile. Set `PI_ALLOW_PARTIAL=1` only when a partial deployment is deliberate.
 
 ## What is extracted
 
@@ -130,15 +130,15 @@ Machine order is significant. When the same session exists on several machines, 
 - Projects derived from working-directory names
 - Courtesy, collaboration, correction, urgency, and profanity patterns in user messages
 
-Pi Profile does not attempt to invent acceptance rates, lines changed, commits, or outcomes that Pi sessions do not reliably provide.
+Pi Profile does not invent acceptance rates, lines changed, commits, or outcomes that Pi sessions do not reliably provide.
 
 ## Privacy
 
 Remote JSONL is streamed over SSH and is not mirrored to disk. User text is inspected in memory for aggregate language counts and then discarded.
 
-Lakebed receives the compact profile snapshot, not raw transcripts, full working-directory paths, session UUIDs, or session titles. The local ignored `data/profile.json` contains normalized session metadata for debugging and future analysis.
+The committed Site snapshots do not contain raw transcripts, full working-directory paths, session UUIDs, or session titles. The ignored `data/profile.json` contains normalized session metadata for local debugging and future analysis.
 
-Project basenames and aggregate activity are public in the deployed profile. Remove or rename projects before publishing if those names are sensitive.
+Project basenames and aggregate activity are public in the deployed profile. Remove or rename projects before committing a snapshot if those names are sensitive.
 
 ## Metrics
 
@@ -158,8 +158,9 @@ Daily activity uses event timestamps in UTC. Session totals remain exact even wh
 
 ```bash
 npm test          # parser and analyzer tests
-npm run aggregate # refresh local data and the capsule snapshot
-npm run deploy    # deploy the existing snapshot
+npm run typecheck # application typecheck
+npm run build     # static vinext production build
+npm run dev       # local vinext development server
 ```
 
-The Lakebed interface is in `capsule/client/index.tsx`. Collection and aggregation live in `src/server-aggregate.js` and `src/profile-lib.js`.
+The Site is in `app/`. Collection and aggregation live in `src/server-aggregate.js` and `src/profile-lib.js`.

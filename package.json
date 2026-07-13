@@ -1,15 +1,40 @@
 {
   "name": "pi-profile",
   "private": true,
-  "description": "A multi-machine activity profile for Pi sessions, displayed with Lakebed",
+  "description": "A multi-machine activity profile for Pi sessions",
   "license": "MIT",
   "repository": "github:IgorWarzocha/pi-profile",
   "type": "module",
   "scripts": {
     "aggregate": "node src/server-aggregate.js",
-    "deploy": "cd capsule && npx lakebed deploy",
-    "publish": "npm run aggregate && npm run deploy",
+    "dev": "vinext dev",
+    "build": "vinext build",
+    "start": "vinext start",
+    "typecheck": "tsc --noEmit",
+    "check": "npm test && npm run typecheck && npm run build",
     "test": "node --test"
   },
-  "engines": { "node": ">=20" }
+  "dependencies": {
+    "next": "16.2.10",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-server-dom-webpack": "19.2.7",
+    "vinext": "1.0.0-beta.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.2",
+    "@types/node": "26.1.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "@vitejs/plugin-rsc": "0.5.27",
+    "tailwindcss": "4.3.2",
+    "typescript": "7.0.2",
+    "vite": "8.1.4"
+  },
+  "overrides": {
+    "postcss": "8.5.10"
+  },
+  "engines": { "node": ">=22.12.0" },
+  "packageManager": "npm@11.13.0"
 }
