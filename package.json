@@ -1,0 +1,11 @@
+{
+  "name": "pi-profile",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scan": "node src/cli.js scan",
+    "analyze": "node src/cli.js analyze",
+    "aggregate": "node src/cli.js aggregate"
+  },
+  "engines": { "node": ">=20" }
+}
