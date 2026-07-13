@@ -39,7 +39,7 @@ export function finalizeStream(state) {
   return state.sessions.map(finalizeSession);
 }
 
-export function dedupeSessions(machineCollections) {
+export function dedupeSessions(machineCollections, machineOrder = MACHINE_ORDER) {
   const groups = new Map();
   for (const collection of machineCollections) {
     for (const session of collection.sessions) {
@@ -50,7 +50,7 @@ export function dedupeSessions(machineCollections) {
   }
   const selected = [];
   for (const variants of groups.values()) {
-    variants.sort((a, b) => MACHINE_ORDER.indexOf(a.machine) - MACHINE_ORDER.indexOf(b.machine) || b.counts.events - a.counts.events || Date.parse(b.endedAt) - Date.parse(a.endedAt));
+    variants.sort((a, b) => machineOrder.indexOf(a.machine) - machineOrder.indexOf(b.machine) || b.counts.events - a.counts.events || Date.parse(b.endedAt) - Date.parse(a.endedAt));
     const session = variants[0];
     session.availableMachines = [...new Set(variants.map((item) => item.machine))];
     session.duplicateCount = variants.length;
@@ -60,7 +60,9 @@ export function dedupeSessions(machineCollections) {
   return selected.sort((a, b) => Date.parse(a.startedAt) - Date.parse(b.startedAt));
 }
 
-export function buildProfile(sessions, collections, generatedAt = new Date().toISOString()) {
+export function buildProfile(sessions, collections, options = {}) {
+  const generatedAt = options.generatedAt ?? new Date().toISOString();
+  const machineOrder = options.machineOrder ?? MACHINE_ORDER;
   const daily = {}, modelMap = {}, projectMap = {}, toolMap = {}, reasoningLevels = {}, language = {};
   const totals = zeroUsage();
   let userMessages = 0, assistantMessages = 0, toolCalls = 0, toolResults = 0, toolErrors = 0, compactions = 0, activeDurationMs = 0;
@@ -107,23 +109,13 @@ export function buildProfile(sessions, collections, generatedAt = new Date().toI
   const deepest = [...sessions].sort((a, b) => (b.counts.userMessages + b.counts.assistantMessages) - (a.counts.userMessages + a.counts.assistantMessages))[0];
   const peakDay = days.map((day) => ({ day, ...daily[day] })).sort((a, b) => b.tokens - a.tokens)[0];
   const sourceCount = collections.reduce((sum, item) => sum + item.sessions.length, 0);
-  const selectedByMachine = Object.fromEntries(MACHINE_ORDER.map((machine) => [machine, sessions.filter((s) => s.machine === machine).length]));
+  const selectedByMachine = Object.fromEntries(machineOrder.map((machine) => [machine, sessions.filter((s) => s.machine === machine).length]));
   const machines = collections.map((item) => ({ machine: item.machine, ok: item.ok, sourceSessions: item.sessions.length, selectedSessions: selectedByMachine[item.machine] ?? 0, malformedLines: item.malformedLines, error: item.error }));
 
   return {
     schemaVersion: 2,
     generatedAt,
-    profile: {
-      name: "Howaboua",
-      handle: "@howaboua",
-      avatarUrl: "https://avatars.githubusercontent.com/u/634445?v=4",
-      links: {
-        x: "https://x.com/howaboua",
-        github: "https://github.com/IgorWarzocha",
-        website: "https://howaboua.dev",
-        linkedin: "https://www.linkedin.com/in/igorwarzocha",
-      },
-    },
+    profile: options.profile ?? { name: "Pi user", handle: "", avatarUrl: "", links: {} },
     headline: {
       lifetimeTokens: totals.totalTokens,
       peakTokens: peakDay?.tokens ?? 0,

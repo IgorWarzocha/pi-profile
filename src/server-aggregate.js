@@ -1,18 +1,16 @@
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { buildProfile, createStreamState, dedupeSessions, finalizeStream, ingestLine } from "./profile-lib.js";
+import config from "../profile.config.js";
 
 const root = new URL("..", import.meta.url).pathname;
-const machines = [
-  { machine: "server", host: null },
-  { machine: "desktop", host: process.env.PI_DESKTOP_HOST ?? "desktop" },
-  { machine: "laptop", host: process.env.PI_LAPTOP_HOST ?? "laptop" },
-];
-const remoteCommand = "find ~/.pi/agent/sessions -type f -name '*.jsonl' -exec cat {} \\;";
+const machines = config.machines.map(({ name, ...machine }) => ({ machine: name, ...machine }));
 
-async function collect({ machine, host }) {
+async function collect({ machine, host, sessionsDir }) {
   const startedAt = new Date().toISOString();
   const state = createStreamState(machine);
+  const sourceDir = sessionsDir.replace(/^~/, "$HOME");
+  const remoteCommand = `find ${sourceDir} -type f -name '*.jsonl' -exec cat {} \\;`;
   const child = host
     ? spawn("ssh", ["-o", "BatchMode=yes", "-o", "ConnectTimeout=8", host, remoteCommand])
     : spawn("bash", ["-lc", remoteCommand]);
@@ -37,8 +35,9 @@ const collections = await Promise.all(machines.map(async (machine) => {
 }));
 const failed = collections.filter((collection) => !collection.ok);
 if (failed.length && process.env.PI_ALLOW_PARTIAL !== "1") throw new Error(`Refusing to publish a partial profile; unavailable: ${failed.map((item) => item.machine).join(", ")}`);
-const sessions = dedupeSessions(collections);
-const profile = buildProfile(sessions, collections);
+const machineOrder = machines.map(({ machine }) => machine);
+const sessions = dedupeSessions(collections, machineOrder);
+const profile = buildProfile(sessions, collections, { machineOrder, profile: config.profile });
 
 await mkdir(`${root}data`, { recursive: true });
 await mkdir(`${root}capsule/shared`, { recursive: true });

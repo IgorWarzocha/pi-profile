@@ -1,6 +1,9 @@
 {
   "name": "pi-profile",
   "private": true,
+  "description": "A multi-machine activity profile for Pi sessions, displayed with Lakebed",
+  "license": "MIT",
+  "repository": "github:IgorWarzocha/pi-profile",
   "type": "module",
   "scripts": {
     "aggregate": "node src/server-aggregate.js",
