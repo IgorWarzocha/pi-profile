@@ -113,7 +113,17 @@ export function buildProfile(sessions, collections, generatedAt = new Date().toI
   return {
     schemaVersion: 2,
     generatedAt,
-    profile: { name: "Howaboua", handle: "@howaboua", monogram: "HB", subtitle: "Building with Pi across three machines" },
+    profile: {
+      name: "Howaboua",
+      handle: "@howaboua",
+      avatarUrl: "https://avatars.githubusercontent.com/u/634445?v=4",
+      links: {
+        x: "https://x.com/howaboua",
+        github: "https://github.com/IgorWarzocha",
+        website: "https://howaboua.dev",
+        linkedin: "https://www.linkedin.com/in/igorwarzocha",
+      },
+    },
     headline: {
       lifetimeTokens: totals.totalTokens,
       peakTokens: peakDay?.tokens ?? 0,
