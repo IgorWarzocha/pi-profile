@@ -37,7 +37,7 @@ export function App() {
           <img src={p.profile.avatarUrl} alt="" className="h-20 w-20 shrink-0 rounded-full border border-white/10 object-cover shadow-[inset_0_1px_0_rgba(255,255,255,.08)]" />
           <div className="min-w-0"><h1 className="text-4xl font-semibold tracking-[-.045em] sm:text-5xl">{p.profile.name}</h1><SocialLinks profile={p.profile} /></div>
         </div>
-        <div className="sm:text-right"><div className="text-xs font-semibold uppercase tracking-[.24em] text-white/45">Pi profile</div><div className="mt-2 flex items-center gap-2 text-xs text-white/35 sm:justify-end"><span className="h-1.5 w-1.5 rounded-full bg-[#80d49c] shadow-[0_0_10px_#80d49c]" /> synced {relativeTime(p.generatedAt)}</div></div>
+        <div className="sm:text-right"><div className="text-xs font-semibold uppercase tracking-[.24em] text-white/45">Pi profile</div><div className="mt-2 flex items-center gap-2 text-xs text-white/35 sm:justify-end"><span className="h-1.5 w-1.5 rounded-full bg-[#80d49c] shadow-[0_0_10px_#80d49c]" /> synced {relativeTime(p.generatedAt)}</div><a href="https://github.com/IgorWarzocha/pi-profile" target="_blank" rel="noreferrer" className="mt-2 inline-block text-xs text-white/30 transition hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8eb7ff]/50">Want one?</a></div>
       </header>
 
       <section aria-label="Profile highlights" className="mt-8 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/[.08] bg-[#111414] lg:grid-cols-4">
