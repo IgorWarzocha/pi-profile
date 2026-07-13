@@ -1,5 +1,6 @@
 import { useQuery } from "lakebed/client";
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { PROFILE_OVERVIEW } from "../shared/profile-overview";
 
 type NumberMap = Record<string, number>;
 type DailyMetric = { sessions: number; tokens: number; outputTokens: number; toolCalls: number; messages: number; cost: number; courtesy: number; collaboration: number; friction: number };
@@ -19,14 +20,13 @@ type Profile = {
   insights: Record<string, string | number | undefined>;
   recentSessions: Array<{ project: string; machine: string; startedAt: string; endedAt: string; observedDurationMs: number; activeDurationMs: number; messages: number; toolCalls: number; tokens: number; model?: string; compactions: number }>;
 };
+type Overview = Pick<Profile, "generatedAt" | "profile" | "headline" | "totals" | "daily" | "insights" | "models" | "projects" | "tools" | "reasoningLevels">;
 type HeatMetric = "tokens" | "sessions" | "friction";
 
 export function App() {
-  const data = useQuery<Profile>("profile");
+  const p = PROFILE_OVERVIEW as unknown as Overview;
   const [heatMetric, setHeatMetric] = useState<HeatMetric>("tokens");
-  useEffect(() => { if (data?.profile) document.title = `${data.profile.name} · Pi Profile`; }, [data?.profile?.name]);
-  if (!data?.profile) return <Loading />;
-  const p = data;
+  useEffect(() => { document.title = `${p.profile.name} · Pi Profile`; }, [p.profile.name]);
   const t = p.totals;
 
   return <main className="min-h-screen bg-[#0d0f0f] text-[#f2f1eb] selection:bg-[#8eb7ff] selection:text-black">
@@ -40,25 +40,24 @@ export function App() {
         <div className="sm:text-right"><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.24em] text-white/45 sm:justify-end"><PiMark /> Pi profile</div><div className="mt-2 flex items-center gap-2 text-xs text-white/35 sm:justify-end"><span className="h-1.5 w-1.5 rounded-full bg-[#80d49c] shadow-[0_0_10px_#80d49c]" /> synced {relativeTime(p.generatedAt)}</div></div>
       </header>
 
-      <section aria-label="Profile highlights" className="mt-8 grid overflow-hidden rounded-2xl border border-white/[.08] bg-[#111414] sm:grid-cols-2 lg:grid-cols-7">
+      <section aria-label="Profile highlights" className="mt-8 grid grid-cols-2 overflow-hidden rounded-2xl border border-white/[.08] bg-[#111414] lg:grid-cols-4">
         <HeroStat label="Lifetime tokens" value={compact(p.headline.lifetimeTokens)} detail={`${compact(t.outputTokens)} output`} />
         <HeroStat label="Cache read" value={percent(t.cacheReadShare)} detail={`${compact(t.cacheReadTokens)} cached`} />
         <HeroStat label="Reported cost" value={money(t.cost)} />
-        <HeroStat label="Peak tokens" value={compact(p.headline.peakTokens)} detail={prettyDate(p.headline.peakDay)} />
-        <HeroStat label="Longest active session" value={duration(p.headline.longestSessionMs)} detail={String(p.insights.longestSessionProject ?? "session")} />
-        <HeroStat label="Current streak" value={`${p.headline.currentStreak} days`} />
-        <HeroStat label="Longest streak" value={`${p.headline.longestStreak} days`} detail={`${t.activeDays} active days`} />
+        <HeroStat label="Current streak" value={`${p.headline.currentStreak} days`} detail={`${p.headline.longestStreak} day record`} />
       </section>
 
       <section className="mt-12">
         <SectionHeading title="Activity" aside={<MetricTabs value={heatMetric} onChange={setHeatMetric} />} />
         <div className="rounded-2xl border border-white/[.08] bg-[#111414] p-5 sm:p-7">
           <Heatmap daily={p.daily} metric={heatMetric} />
-          <div className="mt-6 grid gap-6 border-t border-white/[.07] pt-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-6 grid gap-x-6 gap-y-5 border-t border-white/[.07] pt-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
             <InlineStat label="Sessions" value={integer(t.sessions)} note={`${integer(t.activeDays)} active days`} />
+            <InlineStat label="Active time" value={duration(t.activeDurationMs)} note="estimated" />
             <InlineStat label="Messages" value={integer(t.userMessages + t.assistantMessages)} note={`${integer(t.userMessages)} prompts`} />
             <InlineStat label="Tool calls" value={integer(t.toolCalls)} note={`${integer(t.toolErrors)} errors`} />
-            <InlineStat label="Active time" value={duration(t.activeDurationMs)} note="estimated" />
+            <InlineStat label="Peak day" value={compact(p.headline.peakTokens)} note={prettyDate(p.headline.peakDay)} />
+            <InlineStat label="Longest session" value={duration(p.headline.longestSessionMs)} note={String(p.insights.longestSessionProject ?? "session")} />
           </div>
         </div>
       </section>
@@ -74,6 +73,32 @@ export function App() {
         </div>
       </section>
 
+      <DeferredDetails />
+      <ProfileFooter />
+    </div>
+  </main>;
+}
+
+function DeferredDetails() {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    const idle = (window as any).requestIdleCallback;
+    const id = idle ? idle(() => setEnabled(true), { timeout: 1200 }) : window.setTimeout(() => setEnabled(true), 0);
+    return () => { const cancel = (window as any).cancelIdleCallback; cancel ? cancel(id) : window.clearTimeout(id); };
+  }, []);
+  return enabled ? <ProfileDetailsLoader /> : null;
+}
+
+function ProfileDetailsLoader() {
+  const profile = useQuery<Profile>("profile");
+  return profile?.profile ? <ProfileDetails profile={profile} /> : <DetailsLoading />;
+}
+
+function DetailsLoading() { return <section className="mt-12 grid gap-5 lg:grid-cols-3" aria-label="Loading profile details"><span className="sr-only">Loading profile details</span>{[0, 1, 2].map((item) => <div key={item} className="h-72 rounded-2xl border border-white/[.06] bg-[#111414] p-5"><div className="h-4 w-20 rounded bg-white/[.07]" /><div className="mt-8 space-y-5">{[0, 1, 2, 3].map((line) => <div key={line} className="h-2 rounded bg-white/[.045]" style={{ width: `${88 - line * 9}%` }} />)}</div></div>)}</section>; }
+
+function ProfileDetails({ profile: p }: { profile: Profile }) {
+  const t = p.totals;
+  return <div className="details-enter">
       <section className="mt-12 grid gap-5 lg:grid-cols-3">
         <div className="min-w-0">
           <SectionHeading title="Models" />
@@ -122,10 +147,10 @@ export function App() {
         </div>
       </section>
 
-      <footer className="mt-14 flex flex-col justify-between gap-3 border-t border-white/[.08] pt-5 text-xs text-white/30 sm:flex-row"><a href="https://lakebed.dev" target="_blank" rel="noreferrer" className="transition hover:text-white">Hosted on Lakebed</a><a href="https://github.com/IgorWarzocha/pi-profile" target="_blank" rel="noreferrer" className="transition hover:text-white">Want one?</a></footer>
-    </div>
-  </main>;
+    </div>;
 }
+
+function ProfileFooter() { return <footer className="mt-14 flex flex-col justify-between gap-3 border-t border-white/[.08] pt-5 text-xs text-white/30 sm:flex-row"><a href="https://lakebed.dev" target="_blank" rel="noreferrer" className="transition hover:text-white">Hosted on Lakebed</a><a href="https://github.com/IgorWarzocha/pi-profile" target="_blank" rel="noreferrer" className="transition hover:text-white">Want one?</a></footer>; }
 
 function Heatmap({ daily, metric }: { daily: Record<string, DailyMetric>; metric: HeatMetric }) {
   const days = useMemo(() => calendarDays(Object.keys(daily).sort().at(-1)), [daily]);
@@ -149,7 +174,7 @@ function SocialLinks({ profile }: { profile: Profile["profile"] }) {
   ];
   return <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-white/40">{links.map(({ href, label, icon }) => <a key={href} href={href} target="_blank" rel="noreferrer" aria-label={label} title={label} className="inline-flex h-5 items-center transition hover:text-white focus:outline-none focus:ring-2 focus:ring-[#8eb7ff]/50">{icon ? <SocialIcon name={icon} /> : label}</a>)}</div>;
 }
-function HeroStat({ label, value, detail }: { label: string; value: string; detail?: string }) { return <div className="border-b border-white/[.07] p-5 last:border-b-0 sm:[&:nth-child(odd)]:border-r lg:border-b-0 lg:border-r lg:last:border-r-0"><div className="text-2xl font-medium tracking-[-.035em]">{value}</div><div className="mt-1 text-sm text-white/55">{label}</div>{detail && <div className="mt-3 truncate text-[11px] text-white/25">{detail}</div>}</div>; }
+function HeroStat({ label, value, detail }: { label: string; value: string; detail?: string }) { return <div className="border-b border-white/[.07] p-5 last:border-b-0 [&:nth-child(odd)]:border-r [&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"><div className="text-2xl font-medium tabular-nums tracking-[-.035em]">{value}</div><div className="mt-1 text-sm text-white/55">{label}</div>{detail && <div className="mt-3 truncate text-[11px] text-white/25">{detail}</div>}</div>; }
 function InlineStat({ label, value, note }: { label: string; value: string; note: string }) { return <div><div className="text-[10px] font-semibold uppercase tracking-[.18em] text-white/30">{label}</div><div className="mt-1 text-2xl tracking-tight">{value}</div><div className="mt-1 text-xs text-white/30">{note}</div></div>; }
 function SectionHeading({ title, aside }: { title: any; aside?: any }) { return <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><h2 className="text-xl font-medium tracking-[-.025em]">{title}</h2>{aside}</div>; }
 function InsightRow({ label, value, meta, color, last }: { label: string; value: string; meta: string; color: string; last?: boolean }) { return <div className={`grid grid-cols-[8px_minmax(130px,.6fr)_minmax(0,1fr)_auto] items-center gap-3 px-5 py-3.5 ${last ? "" : "border-b border-white/[.07]"}`}><span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} /><span className="text-xs text-white/35">{label}</span><span className="truncate text-sm">{value}</span><span className="text-xs text-white/35">{meta}</span></div>; }
@@ -166,8 +191,6 @@ function SocialIcon({ name }: { name: string }) {
   if (name === "github") return <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2.23c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.7-1.28-1.7-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.28-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.97 10.97 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.71 5.38-5.29 5.67.42.36.79 1.06.79 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z" /></svg>;
   return <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.86 0-2.14 1.45-2.14 2.94v5.67H9.34V8.98h3.42v1.57h.05c.47-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.29ZM5.32 7.41a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13ZM7.1 20.45H3.54V8.98H7.1v11.47Z" /></svg>;
 }
-function Loading() { return <main className="grid min-h-screen place-items-center bg-[#0d0f0f] text-sm text-white/45">Loading profile…</main>; }
-
 function calendarDays(last?: string) { const end = last ? new Date(`${last}T00:00:00Z`) : new Date(); const start = new Date(end); start.setUTCDate(start.getUTCDate() - 364 - start.getUTCDay()); const days: string[] = []; for (let d = new Date(start); d <= end; d.setUTCDate(d.getUTCDate() + 1)) days.push(d.toISOString().slice(0, 10)); return days; }
 function heatValue(day: DailyMetric | undefined, metric: HeatMetric) { if (!day) return 0; return metric === "friction" ? day.friction : day[metric] ?? 0; }
 function heatColor(metric: HeatMetric, intensity: number) { const rgb = metric === "friction" ? [239,143,119] : metric === "sessions" ? [128,212,156] : [114,166,255]; return `rgba(${rgb.join(",")},${(.18 + intensity * .82).toFixed(2)})`; }
@@ -189,8 +212,10 @@ const styles = `
   * { box-sizing: border-box; }
   body { margin: 0; background: #0d0f0f; }
   button { font: inherit; }
+  .details-enter { animation: details-in 220ms ease-out both; }
+  @keyframes details-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
   .heat-grid { display: grid; grid-auto-flow: column; grid-template-rows: repeat(7, 1fr); grid-auto-columns: minmax(9px, 1fr); gap: 4px; }
   .heat-cell { aspect-ratio: 1; min-width: 8px; border-radius: 2px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.025); transition: transform 120ms ease, filter 120ms ease; }
   .heat-cell:hover { transform: scale(1.35); filter: brightness(1.25); z-index: 2; }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 `;

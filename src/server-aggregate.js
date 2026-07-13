@@ -38,11 +38,25 @@ if (failed.length && process.env.PI_ALLOW_PARTIAL !== "1") throw new Error(`Refu
 const machineOrder = machines.map(({ machine }) => machine);
 const sessions = dedupeSessions(collections, machineOrder);
 const profile = buildProfile(sessions, collections, { machineOrder, profile: config.profile });
+const overviewDaily = Object.fromEntries(Object.entries(profile.daily).sort(([left], [right]) => left.localeCompare(right)).slice(-371));
+const overview = {
+  generatedAt: profile.generatedAt,
+  profile: profile.profile,
+  headline: profile.headline,
+  totals: profile.totals,
+  daily: overviewDaily,
+  insights: profile.insights,
+  models: profile.models.slice(0, 1),
+  projects: profile.projects.slice(0, 1),
+  tools: profile.tools.slice(0, 1),
+  reasoningLevels: profile.reasoningLevels,
+};
 
 await mkdir(`${root}data`, { recursive: true });
 await mkdir(`${root}capsule/shared`, { recursive: true });
 await writeFile(`${root}data/profile.json`, JSON.stringify({ ...profile, sessions }, null, 2));
 await writeFile(`${root}capsule/shared/default-profile.ts`, `export const DEFAULT_PROFILE = ${JSON.stringify(profile)} as const;\n`);
+await writeFile(`${root}capsule/shared/profile-overview.ts`, `export const PROFILE_OVERVIEW = ${JSON.stringify(overview)} as const;\n`);
 
 console.log(JSON.stringify({
   machines: profile.machines,

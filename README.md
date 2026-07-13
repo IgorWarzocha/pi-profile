@@ -80,7 +80,7 @@ That command:
 2. Parses it in memory on the collector machine.
 3. Deduplicates exact session IDs in the order listed in `profile.config.js`.
 4. Writes the full normalized local result to `data/profile.json`.
-5. Generates a compact Lakebed display snapshot.
+5. Generates an instant overview and a deferred detail snapshot for Lakebed.
 6. Deploys the capsule.
 
 The generated data files are ignored by Git.

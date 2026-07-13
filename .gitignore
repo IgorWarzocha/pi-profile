@@ -2,6 +2,7 @@ data/*.json
 .lakebed/
 capsule/lakebed.json
 capsule/shared/default-profile.ts
+capsule/shared/profile-overview.ts
 node_modules/
 
 .pi/
