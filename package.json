@@ -10,16 +10,14 @@
     "build": "lakebed build capsule --target anonymous",
     "preview": "lakebed dev capsule",
     "deploy": "cd capsule && lakebed deploy",
-    "deploy:staging": "cd capsule && node ../node_modules/lakebed-staging/bin/lakebed.js deploy",
     "claim": "cd capsule && lakebed claim",
-    "claim:staging": "cd capsule && node ../node_modules/lakebed-staging/bin/lakebed.js claim",
     "publish": "npm run aggregate && npm run deploy",
-    "publish:staging": "npm run aggregate && npm run deploy:staging",
     "test": "node --test"
   },
   "devDependencies": {
-    "lakebed": "0.0.25",
-    "lakebed-staging": "npm:lakebed@0.0.26-staging.29169690285"
+    "lakebed": "0.0.29"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  }
 }

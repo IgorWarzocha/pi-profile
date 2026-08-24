@@ -96,20 +96,11 @@ That command:
 
 The generated data files are ignored by Git.
 
-An anonymous Lakebed deployment expires after seven days. Run this from `capsule/` to attach it to your Lakebed account:
+An unclaimed Lakebed deployment eventually expires. Attach it to your Lakebed account to keep it and allow later publishes to update the same app:
 
 ```bash
 npm run claim
 ```
-
-If you deploy with Lakebed's staging channel, keep that channel consistent for deploy and claim:
-
-```bash
-npm run publish:staging
-npm run claim:staging
-```
-
-Staging addresses end in `.staging.lakebed.app`.
 
 ## Automatic refreshes
 
@@ -117,7 +108,6 @@ The repository deliberately does not install a scheduler. Run the publish comman
 
 ```bash
 cd /absolute/path/to/pi-profile && npm run publish
-# or: npm run publish:staging
 ```
 
 Cron and systemd timers both work. Choose the cadence you want and prevent overlapping runs; each publish scans every configured machine before updating Lakebed.
