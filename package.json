@@ -15,7 +15,7 @@
     "test": "node --test"
   },
   "devDependencies": {
-    "lakebed": "0.0.29"
+    "lakebed": "0.0.31"
   },
   "engines": {
     "node": ">=20"
