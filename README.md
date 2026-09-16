@@ -85,9 +85,11 @@ Open the local URL printed by Lakebed, or use `npm run dev:sites` for the Sites 
 The Pi notebook binding is defined in `src/publish-binding.js`. Load it from this repository:
 
 ```js
-var piProfile = (await import("file:///home/igorw/Work/pi-profile/src/publish-binding.js"))
-  .createPiProfileBinding(tools, "/home/igorw/Work/pi-profile");
-text(await piProfile.publish());
+async function publishPiProfile(options = {}) {
+  const { createPiProfileBinding } = await import("file:///home/igorw/Work/pi-profile/src/publish-binding.js");
+  return createPiProfileBinding(tools, "/home/igorw/Work/pi-profile").publish(options);
+}
+text(await publishPiProfile());
 ```
 
 Adjust the absolute path for another checkout. Publication updates both **public** sites. Run it only when that publication is intended.
@@ -96,7 +98,7 @@ The binding requires clean `master`, locks out overlapping runs, collects all ma
 
 Lakebed uses the local ignored `capsule/lakebed.json`. Sites uses the committed `.openai/hosting.json`. Neither binding contains credentials. For your own profile, bind your own deployments before publishing rather than reusing these IDs.
 
-To retry publication of the committed snapshot without recollecting, use `piProfile.publish({ refresh: false })`. This still runs the full validation gate.
+To retry publication of the committed snapshot without recollecting, use `publishPiProfile({ refresh: false })`. This still runs the full validation gate.
 
 For Lakebed alone, `npm run publish:lakebed` collects and publishes. `npm run deploy` publishes the existing shared snapshot without recollecting.
 
