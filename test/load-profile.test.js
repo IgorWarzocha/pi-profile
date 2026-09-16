@@ -17,8 +17,10 @@ test("invalid detail responses fail instead of leaving the loading skeleton", as
 });
 
 test("detail requests return the complete profile snapshot", async () => {
-  const profile = { profile: {}, totals: {}, models: [], machines: [], tools: [],
+  const profile = { schemaVersion: 3, profile: {}, totals: {}, models: [], machines: [], tools: [],
     projects: [], recentSessions: [], language: {}, languageSummary: {} };
   const result = await loadProfile(new AbortController().signal, async () => Response.json(profile));
   assert.deepEqual(result, profile);
+  await assert.rejects(loadProfile(new AbortController().signal, async () =>
+    Response.json({ ...profile, schemaVersion: 2 })), /Invalid profile/);
 });

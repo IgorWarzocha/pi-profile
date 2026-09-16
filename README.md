@@ -175,6 +175,8 @@ cacheRead / (input + cacheRead)
 
 Daily activity uses event timestamps in UTC. Session totals remain exact even when a session spans several days.
 
+Model usage is attributed to each assistant message. Recent sessions show the latest responding model, while projects show the model with the most reported tokens. Hover over either model name, focus it with the keyboard, or tap it to see the full token split. A `+N` suffix counts the other models used. Selecting a model without receiving a response does not count as usage.
+
 ## Development
 
 ```bash

@@ -31,7 +31,7 @@ export function ingestLine(state, line) {
     session.maxTokensBeforeCompaction = Math.max(session.maxTokensBeforeCompaction, entry.tokensBefore ?? 0);
   }
   if (entry.type !== "message" || !entry.message) return;
-  ingestMessage(session, entry.message, (timestamp ?? session.endedAt).slice(0, 10));
+  ingestMessage(session, entry.message, timestamp ?? session.endedAt);
 }
 
 export function finalizeStream(state) {
@@ -91,7 +91,10 @@ export function buildProfile(sessions, collections, options = {}) {
     const project = projectMap[session.projectKey] ??= { name: session.projectName, sessions: 0, tokens: 0, toolCalls: 0, messages: 0, activeDurationMs: 0, lastActive: session.endedAt, machines: new Set(), models: {} };
     project.sessions++; project.tokens += session.usage.totalTokens; project.toolCalls += session.counts.toolCalls; project.messages += session.counts.userMessages + session.counts.assistantMessages;
     project.activeDurationMs += session.activeDurationMs; project.lastActive = later(project.lastActive, session.endedAt); project.machines.add(session.machine);
-    for (const modelId of Object.keys(session.models)) increment(project.models, modelId);
+    for (const [modelId, stats] of Object.entries(session.models)) {
+      const model = project.models[modelId] ??= { tokens: 0, messages: 0 };
+      model.tokens += stats.tokens; model.messages += stats.messages;
+    }
 
     for (const [name, stats] of Object.entries(session.tools)) {
       const tool = toolMap[name] ??= { name, calls: 0, results: 0, errors: 0, sessions: 0 };
@@ -102,7 +105,7 @@ export function buildProfile(sessions, collections, options = {}) {
   const days = Object.keys(daily).sort();
   const streaks = calculateStreaks(days, generatedAt.slice(0, 10));
   const models = Object.values(modelMap).sort((a, b) => b.tokens - a.tokens);
-  const projects = Object.values(projectMap).map((p) => ({ ...p, machines: [...p.machines], models: topEntries(p.models, 3).map(([name]) => name) })).sort((a, b) => b.tokens - a.tokens);
+  const projects = Object.values(projectMap).map((p) => ({ ...p, machines: [...p.machines], models: publicModels(p.models) })).sort((a, b) => b.tokens - a.tokens);
   const tools = Object.values(toolMap).sort((a, b) => b.calls - a.calls);
   const longest = [...sessions].sort((a, b) => b.activeDurationMs - a.activeDurationMs)[0];
   const deepest = [...sessions].sort((a, b) => (b.counts.userMessages + b.counts.assistantMessages) - (a.counts.userMessages + a.counts.assistantMessages))[0];
@@ -112,7 +115,7 @@ export function buildProfile(sessions, collections, options = {}) {
   const machines = collections.map((item) => ({ machine: item.machine, ok: item.ok, sourceSessions: item.sessions.length, selectedSessions: selectedByMachine[item.machine] ?? 0, malformedLines: item.malformedLines, error: item.error }));
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     generatedAt,
     profile: options.profile ?? { name: "Pi user", handle: "", avatarUrl: "", links: {} },
     headline: {
@@ -162,7 +165,8 @@ function createSession(entry, machine) {
   };
 }
 
-function ingestMessage(session, message, day) {
+function ingestMessage(session, message, timestamp) {
+  const day = timestamp.slice(0, 10);
   const daily = session.daily[day] ??= zeroDaily();
   if (message.role === "user") {
     session.counts.userMessages++;
@@ -185,6 +189,10 @@ function ingestMessage(session, message, day) {
   session.counts.assistantMessages++;
   daily.messages++;
   const modelId = message.model ?? "unknown";
+  if (!session.latestModelAt || Date.parse(timestamp) >= Date.parse(session.latestModelAt)) {
+    session.latestModel = modelId;
+    session.latestModelAt = timestamp;
+  }
   const model = touchModel(session, modelId, message.provider);
   model.messages++;
   const usage = normalizeUsage(message.usage);
@@ -210,7 +218,8 @@ function ingestMessage(session, message, day) {
 
 function finalizeSession(session) {
   delete session.previousEventMs;
-  session.models = Object.fromEntries(Object.entries(session.models).filter(([id, stats]) => id !== "unknown" || stats.messages > 0));
+  delete session.latestModelAt;
+  session.models = Object.fromEntries(Object.entries(session.models).filter(([, stats]) => stats.messages > 0));
   return session;
 }
 
@@ -254,9 +263,11 @@ function displayProject(cwd) {
   const worktree = normalized.match(/^(.*)\/\.worktrees\//);
   return path.basename(worktree?.[1] ?? normalized) || "Home";
 }
+function publicModels(models) {
+  return Object.entries(models).map(([modelId, stats]) => ({ modelId, tokens: stats.tokens, messages: stats.messages })).sort((a, b) => b.tokens - a.tokens || b.messages - a.messages || a.modelId.localeCompare(b.modelId));
+}
 function publicSession(s) {
-  const models = Object.entries(s.models).sort((a, b) => b[1].tokens - a[1].tokens);
-  return { project: s.projectName, machine: s.machine, startedAt: s.startedAt, endedAt: s.endedAt, observedDurationMs: s.observedDurationMs, activeDurationMs: s.activeDurationMs, messages: s.counts.userMessages + s.counts.assistantMessages, toolCalls: s.counts.toolCalls, tokens: s.usage.totalTokens, model: models[0]?.[0], compactions: s.counts.compactions };
+  return { project: s.projectName, machine: s.machine, startedAt: s.startedAt, endedAt: s.endedAt, observedDurationMs: s.observedDurationMs, activeDurationMs: s.activeDurationMs, messages: s.counts.userMessages + s.counts.assistantMessages, toolCalls: s.counts.toolCalls, tokens: s.usage.totalTokens, latestModel: s.latestModel, models: publicModels(s.models), compactions: s.counts.compactions };
 }
 function calculateStreaks(days, today) {
   if (!days.length) return { current: 0, longest: 0 };

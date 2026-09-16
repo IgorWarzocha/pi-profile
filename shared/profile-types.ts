@@ -1,5 +1,7 @@
 export type NumberMap = Readonly<Record<string, number>>;
 
+export type ModelUsage = { modelId: string; tokens: number; messages: number };
+
 export type DailyMetric = {
   sessions: number;
   tokens: number;
@@ -58,7 +60,7 @@ export type Profile = {
     activeDurationMs: number;
     lastActive: string;
     machines: ReadonlyArray<string>;
-    models: ReadonlyArray<string>;
+    models: ReadonlyArray<ModelUsage>;
   }>;
   tools: ReadonlyArray<{
     name: string;
@@ -87,7 +89,8 @@ export type Profile = {
     messages: number;
     toolCalls: number;
     tokens: number;
-    model?: string;
+    latestModel?: string;
+    models: ReadonlyArray<ModelUsage>;
     compactions: number;
   }>;
 };

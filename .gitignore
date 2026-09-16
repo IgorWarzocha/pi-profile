@@ -2,6 +2,7 @@ data/*.json
 .lakebed/
 capsule/lakebed.json
 capsule/shared/*.ts
+capsule/client/model-split.tsx
 node_modules/
 
 .pi/
