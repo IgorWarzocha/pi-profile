@@ -1,23 +1,47 @@
 {
   "name": "pi-profile",
   "private": true,
-  "description": "A multi-machine activity profile for Pi sessions, displayed with Lakebed",
+  "description": "One Pi activity profile published to Lakebed and ChatGPT Sites",
   "license": "MIT",
   "repository": "github:IgorWarzocha/pi-profile",
   "type": "module",
   "scripts": {
     "aggregate": "node src/server-aggregate.js",
-    "build": "lakebed build capsule --target anonymous",
-    "preview": "lakebed dev capsule",
-    "deploy": "cd capsule && lakebed deploy",
+    "build": "npm run build:lakebed && npm run build:sites",
+    "build:lakebed": "node src/prepare-lakebed.js && lakebed build capsule --target anonymous",
+    "build:sites": "vinext build",
+    "typecheck": "tsc --noEmit",
+    "check": "npm test && npm run typecheck && npm run build",
+    "dev:sites": "vinext dev",
+    "preview": "node src/prepare-lakebed.js && lakebed dev capsule",
+    "deploy": "node src/prepare-lakebed.js && cd capsule && lakebed deploy",
     "claim": "cd capsule && lakebed claim",
-    "publish": "npm run aggregate && npm run deploy",
+    "publish:lakebed": "npm run aggregate && npm run build:lakebed && npm run deploy",
     "test": "node --test"
   },
+  "dependencies": {
+    "next": "16.3.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "react-server-dom-webpack": "19.2.8",
+    "vinext": "1.0.0-beta.10"
+  },
   "devDependencies": {
-    "lakebed": "0.0.31"
+    "lakebed": "0.0.31",
+    "@cloudflare/vite-plugin": "1.54.10",
+    "@openai/sites-vite-plugin": "0.2.0",
+    "@tailwindcss/postcss": "4.3.2",
+    "@types/node": "26.1.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "@vitejs/plugin-rsc": "0.5.35",
+    "tailwindcss": "4.3.2",
+    "typescript": "7.0.2",
+    "vite": "8.1.4",
+    "wrangler": "4.132.0"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22.18.0"
   }
 }

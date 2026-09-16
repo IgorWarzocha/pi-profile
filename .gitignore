@@ -5,3 +5,9 @@ capsule/shared/*.ts
 node_modules/
 
 .pi/
+dist/
+.next/
+.vinext/
+.wrangler/
+.env*
+*.tsbuildinfo

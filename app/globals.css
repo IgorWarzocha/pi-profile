@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+  background: #0d0f0f;
+  color: #f2f1eb;
+}
+
+html {
+  background: #0d0f0f;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
