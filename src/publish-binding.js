@@ -41,11 +41,11 @@ export function createPiProfileBinding(tools, projectDir) {
 
   return {
     description: "Collect once, validate both apps, commit only public snapshots, and update both existing public sites.",
-    usage: "await piProfile.publish() after explicit publication approval. Requires clean master, configured Lakebed login and Sites tools. Returns separate deployment results; inspect Sites status.",
-    async publish() {
+    usage: "await piProfile.publish() after explicit publication approval. Requires clean master, configured Lakebed login and Sites tools. Use { refresh: false } to validate and republish the committed snapshot. Returns separate deployment results; inspect Sites status.",
+    async publish({ refresh = true } = {}) {
       await run('test "$(git branch --show-current)" = master && test -z "$(git status --porcelain)" && mkdir .git/pi-profile-publish.lock');
       try {
-        await run("npm run aggregate && npm run check");
+        await run(refresh ? "npm run aggregate && npm run check" : "npm run check");
         await run("git add -- shared/profile.ts shared/profile-overview.ts");
         await run('git diff --cached --quiet || git commit -m "Refresh shared Pi profile snapshot"');
         await run("git push origin master");

@@ -50,3 +50,10 @@ test("Sites failure does not hide a successful Lakebed publication", async () =>
   assert.ok(result.sites.error.includes("unavailable"));
   assert.equal(result.lakebed.result, "");
 });
+
+test("explicit retry validates the committed snapshot without recollecting", async () => {
+  const h = harness();
+  await h.binding.publish({ refresh: false });
+  assert.equal(h.commands[1], "npm run check");
+  assert.ok(!h.commands.some((cmd) => cmd.includes("npm run aggregate")));
+});

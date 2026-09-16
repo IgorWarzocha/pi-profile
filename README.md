@@ -96,6 +96,8 @@ The binding requires clean `master`, locks out overlapping runs, collects all ma
 
 Lakebed uses the local ignored `capsule/lakebed.json`. Sites uses the committed `.openai/hosting.json`. Neither binding contains credentials. For your own profile, bind your own deployments before publishing rather than reusing these IDs.
 
+To retry publication of the committed snapshot without recollecting, use `piProfile.publish({ refresh: false })`. This still runs the full validation gate.
+
 For Lakebed alone, `npm run publish:lakebed` collects and publishes. `npm run deploy` publishes the existing shared snapshot without recollecting.
 
 An unclaimed Lakebed deployment eventually expires. Attach it to your Lakebed account to keep it and allow later publishes to update the same app:

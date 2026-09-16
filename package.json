@@ -10,7 +10,7 @@
     "build": "npm run build:lakebed && npm run build:sites",
     "build:lakebed": "node src/prepare-lakebed.js && lakebed build capsule --target anonymous",
     "build:sites": "vinext build",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "vinext typegen && tsc --noEmit",
     "check": "npm test && npm run typecheck && npm run build",
     "dev:sites": "vinext dev",
     "preview": "node src/prepare-lakebed.js && lakebed dev capsule",
@@ -20,7 +20,6 @@
     "test": "node --test"
   },
   "dependencies": {
-    "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-server-dom-webpack": "19.2.8",
