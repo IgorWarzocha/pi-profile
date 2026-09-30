@@ -141,6 +141,16 @@ machines: [
 
 Machine order is significant. When the same session exists on several machines, the first configured copy wins. If one machine cannot be read, publishing stops rather than replacing lifetime totals with a partial profile. Set `PI_ALLOW_PARTIAL=1` only when a partial deployment is deliberate.
 
+## Keeping history after deleting sessions
+
+Each aggregation retains previously collected session statistics in the local, ignored `data/profile.json`. Live sessions update their saved statistics by session ID without being counted twice. A stale copy with fewer recorded events cannot replace a fuller saved summary. Sessions no longer found on any machine keep contributing to lifetime totals, daily activity, projects, models, and tools.
+
+Before deleting old session logs, run `npm run aggregate` successfully so their statistics are saved. Keep `data/profile.json` on the collector server. It contains session IDs and statistics, not conversation text or full working-directory paths. Existing local snapshots are adopted automatically on the first run. Deleted logs cannot be reconstructed from these summaries.
+
+This file is now persistent history, not a disposable build artifact. A fresh checkout or removal of `data/profile.json` loses retained history that is no longer present in source logs. Public snapshots cannot restore it. An unreadable or unsupported history file stops aggregation rather than silently replacing it.
+
+Concurrent aggregations are blocked by `data/profile.json.lock`. If a run is killed and leaves this directory behind, first verify that no `node src/server-aggregate.js` process is running, then remove the empty lock directory with `rmdir data/profile.json.lock` and retry.
+
 ## What is extracted
 
 - Sessions, active days, streaks, duration, and estimated active time
@@ -157,7 +167,7 @@ Pi Profile does not attempt to invent acceptance rates, lines changed, commits, 
 
 Remote JSONL is streamed over SSH and is not mirrored to disk. User text is inspected in memory for aggregate language counts and then discarded.
 
-Both hosts and Git receive only the compact public snapshots, not raw transcripts, full working-directory paths, session UUIDs, or session titles. `src/public-profile.js` rejects private fields and unbounded snapshots before writing them. The local ignored `data/profile.json` contains normalized session metadata for debugging and future analysis.
+Both hosts and Git receive only the compact public snapshots, not raw transcripts, full working-directory paths, session UUIDs, or session titles. `src/public-profile.js` rejects private fields and unbounded snapshots before writing them. The local ignored `data/profile.json` retains normalized session statistics so deleting source logs does not erase profile history.
 
 Project basenames and aggregate activity are public in Git and both deployed profiles. Remove or rename projects before committing if those names are sensitive.
 

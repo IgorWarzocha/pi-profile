@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { buildProfile, createStreamState, dedupeSessions, finalizeStream, ingestLine } from "./profile-lib.js";
 import config from "../profile.config.js";
 import { assertPublicProfile } from "./public-profile.js";
+import { retainSessions, withSessionHistory } from "./session-history.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const machines = config.machines.map(({ name, ...machine }) => ({ machine: name, ...machine }));
@@ -30,40 +31,45 @@ async function collect({ machine, host, sessionsDir }) {
   return { machine, ok: true, startedAt, completedAt: new Date().toISOString(), malformedLines: state.malformedLines, sessions: finalizeStream(state) };
 }
 
-const collections = await Promise.all(machines.map(async (machine) => {
-  try { return await collect(machine); }
-  catch (error) { console.error(`${machine.machine}: ${String(error.message ?? error)}`); return { machine: machine.machine, ok: false, error: "collection failed", malformedLines: 0, sessions: [] }; }
-}));
-const failed = collections.filter((collection) => !collection.ok);
-if (failed.length && process.env.PI_ALLOW_PARTIAL !== "1") throw new Error(`Refusing to publish a partial profile; unavailable: ${failed.map((item) => item.machine).join(", ")}`);
-const machineOrder = machines.map(({ machine }) => machine);
-const sessions = dedupeSessions(collections, machineOrder);
-const profile = assertPublicProfile(buildProfile(sessions, collections, { machineOrder, profile: config.profile }));
-const overviewDaily = Object.fromEntries(Object.entries(profile.daily).sort(([left], [right]) => left.localeCompare(right)).slice(-371));
-const overview = {
-  generatedAt: profile.generatedAt,
-  profile: profile.profile,
-  headline: profile.headline,
-  totals: profile.totals,
-  daily: overviewDaily,
-  insights: profile.insights,
-  models: profile.models.slice(0, 1),
-  projects: profile.projects.slice(0, 1),
-  tools: profile.tools.slice(0, 1),
-  reasoningLevels: profile.reasoningLevels,
-};
-
 await mkdir(`${root}data`, { recursive: true });
-await mkdir(`${root}shared`, { recursive: true });
-await writeFile(`${root}data/profile.json`, JSON.stringify({ ...profile, sessions }, null, 2));
-await writeFile(`${root}shared/profile.ts`, `import type { Profile } from "./profile-types";\nexport const DEFAULT_PROFILE = ${JSON.stringify(profile)} as const satisfies Profile;\n`);
-await writeFile(`${root}shared/profile-overview.ts`, `import type { Overview } from "./profile-types";\nexport const PROFILE_OVERVIEW = ${JSON.stringify(overview)} as const satisfies Overview;\n`);
+await withSessionHistory(`${root}data/profile.json`, async (previous) => {
+  const collections = await Promise.all(machines.map(async (machine) => {
+    try { return await collect(machine); }
+    catch (error) { console.error(`${machine.machine}: ${String(error.message ?? error)}`); return { machine: machine.machine, ok: false, error: "collection failed", malformedLines: 0, sessions: [] }; }
+  }));
+  const failed = collections.filter((collection) => !collection.ok);
+  if (failed.length && process.env.PI_ALLOW_PARTIAL !== "1") throw new Error(`Refusing to publish a partial profile; unavailable: ${failed.map((item) => item.machine).join(", ")}`);
+  const machineOrder = machines.map(({ machine }) => machine);
+  const sessions = retainSessions(previous, dedupeSessions(collections, machineOrder));
+  const profile = assertPublicProfile(buildProfile(sessions, collections, { machineOrder, profile: config.profile }));
+  return { ...profile, sessions };
+}, async (snapshot) => {
+  const { sessions: localSessions, ...profile } = snapshot;
+  const overviewDaily = Object.fromEntries(Object.entries(profile.daily).sort(([left], [right]) => left.localeCompare(right)).slice(-371));
+  const overview = {
+    generatedAt: profile.generatedAt,
+    profile: profile.profile,
+    headline: profile.headline,
+    totals: profile.totals,
+    daily: overviewDaily,
+    insights: profile.insights,
+    models: profile.models.slice(0, 1),
+    projects: profile.projects.slice(0, 1),
+    tools: profile.tools.slice(0, 1),
+    reasoningLevels: profile.reasoningLevels,
+  };
 
-console.log(JSON.stringify({
-  machines: profile.machines,
-  uniqueSessions: profile.totals.sessions,
-  duplicatesRemoved: profile.totals.duplicatesRemoved,
-  tokens: profile.totals.totalTokens,
-  toolCalls: profile.totals.toolCalls,
-  generatedAt: profile.generatedAt,
-}, null, 2));
+  await mkdir(`${root}shared`, { recursive: true });
+  await writeFile(`${root}shared/profile.ts`, `import type { Profile } from "./profile-types";\nexport const DEFAULT_PROFILE = ${JSON.stringify(profile)} as const satisfies Profile;\n`);
+  await writeFile(`${root}shared/profile-overview.ts`, `import type { Overview } from "./profile-types";\nexport const PROFILE_OVERVIEW = ${JSON.stringify(overview)} as const satisfies Overview;\n`);
+
+  console.log(JSON.stringify({
+    machines: profile.machines,
+    uniqueSessions: profile.totals.sessions,
+    duplicatesRemoved: profile.totals.duplicatesRemoved,
+    retainedSessions: profile.totals.retainedSessions,
+    tokens: profile.totals.totalTokens,
+    toolCalls: profile.totals.toolCalls,
+    generatedAt: profile.generatedAt,
+  }, null, 2));
+});

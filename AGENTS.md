@@ -1,8 +1,8 @@
 ## Invariants
 
-- `profile.config.js` owns identity, machine sources, and deduplication priority; the first machine wins exact-ID duplicates.
+- `profile.config.js` owns identity, machine sources, and deduplication priority; the first machine wins exact-ID live duplicates. A fuller saved summary survives a stale live copy.
 - Raw JSONL MUST stay streamed and in memory. Never persist transcripts or user text in generated/public output.
-- `data/profile.json`, `capsule/shared/*.ts`, `.lakebed/`, and `capsule/lakebed.json` are generated or local deployment state and MUST remain untracked.
+- `data/profile.json` is persistent local session-statistics history. Never delete it as a generated artifact; aggregation retains missing sessions and replaces live ones by ID. Keep it and `capsule/shared/*.ts`, `.lakebed/`, and `capsule/lakebed.json` untracked.
 - Publishing fails closed when any machine is unavailable. Use `PI_ALLOW_PARTIAL=1` only for an explicitly partial profile.
 - `shared/profile.ts` and `shared/profile-overview.ts` are intentionally committed public snapshots for Sites remote builds. Write them only through aggregation's privacy guard.
 - Both hosts belong on `master`; do not revive the historical Sites branch. The publish binding source and loading instructions are in `src/publish-binding.js` and README.

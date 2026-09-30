@@ -111,7 +111,10 @@ export function buildProfile(sessions, collections, options = {}) {
   const deepest = [...sessions].sort((a, b) => (b.counts.userMessages + b.counts.assistantMessages) - (a.counts.userMessages + a.counts.assistantMessages))[0];
   const peakDay = days.map((day) => ({ day, ...daily[day] })).sort((a, b) => b.tokens - a.tokens)[0];
   const sourceCount = collections.reduce((sum, item) => sum + item.sessions.length, 0);
-  const selectedByMachine = Object.fromEntries(machineOrder.map((machine) => [machine, sessions.filter((s) => s.machine === machine).length]));
+  const liveSessions = dedupeSessions(collections, machineOrder);
+  const liveIds = new Set(liveSessions.map((s) => s.sessionId));
+  const retainedSessions = sessions.filter((s) => !liveIds.has(s.sessionId)).length;
+  const selectedByMachine = Object.fromEntries(machineOrder.map((machine) => [machine, liveSessions.filter((s) => s.machine === machine).length]));
   const machines = collections.map((item) => ({ machine: item.machine, ok: item.ok, sourceSessions: item.sessions.length, selectedSessions: selectedByMachine[item.machine] ?? 0, malformedLines: item.malformedLines, error: item.error }));
 
   return {
@@ -127,7 +130,7 @@ export function buildProfile(sessions, collections, options = {}) {
       longestStreak: streaks.longest,
     },
     totals: {
-      sessions: sessions.length, sourceSessions: sourceCount, duplicatesRemoved: sourceCount - sessions.length,
+      sessions: sessions.length, sourceSessions: sourceCount, duplicatesRemoved: sourceCount - (sessions.length - retainedSessions), retainedSessions,
       activeDays: days.length, userMessages, assistantMessages, toolCalls, toolResults, toolErrors, compactions, activeDurationMs,
       ...totals, cacheReadShare: ratio(totals.cacheReadTokens, totals.inputTokens + totals.cacheReadTokens),
     },
