@@ -7,7 +7,7 @@ export async function loadProfile(signal: AbortSignal, request = fetch): Promise
   if (profile?.schemaVersion !== 3 || !profile.profile || !profile.totals || !Array.isArray(profile.models) ||
       !Array.isArray(profile.machines) || !Array.isArray(profile.tools) ||
       !Array.isArray(profile.projects) || !Array.isArray(profile.recentSessions) ||
-      !profile.language || !profile.languageSummary) {
+      !profile.language || !profile.languageSummary || !Array.isArray(profile.codexUsage)) {
     throw new Error("Invalid profile response");
   }
   return profile;

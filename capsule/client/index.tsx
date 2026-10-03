@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import { PROFILE_OVERVIEW } from "../shared/profile-overview";
 
 import { ModelSplit, prettyModel } from "./model-split";
+import { CodexUsage } from "./codex-usage";
 import type { DailyMetric, NumberMap, Profile } from "../shared/profile-types";
 import { loadProfile } from "./load-profile";
 type HeatMetric = "tokens" | "sessions" | "friction";
@@ -99,6 +100,7 @@ function DetailsLoading() { return <section className="mt-12 grid gap-5 lg:grid-
 function ProfileDetails({ profile: p }: { profile: Profile }) {
   const t = p.totals;
   return <div className="details-enter">
+      <CodexUsage sources={p.codexUsage} generatedAt={p.generatedAt} />
       <section className="mt-12 grid items-stretch gap-5 lg:grid-cols-3">
         <div className="flex min-w-0 flex-col">
           <SectionHeading title="Models" />

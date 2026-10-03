@@ -16,6 +16,7 @@ export type DailyMetric = {
 
 export type Profile = {
   schemaVersion: number;
+  codexUsage: ReadonlyArray<CodexUsageSource>;
   generatedAt: string;
   profile: {
     name: string;
@@ -108,3 +109,32 @@ export type Overview = Pick<
   | "tools"
   | "reasoningLevels"
 >;
+
+export type CodexSpend = {
+  usd: number; tokens: number; input: number; output: number; cacheRead: number; cacheWrite: number;
+  requests: number; unpriced: number;
+};
+export type CodexSummary = {
+  total: CodexSpend;
+  models: ReadonlyArray<CodexSpend & { modelId: string }>;
+};
+export type CodexWindow = CodexSummary & {
+  start: string; expectedReset: string; source: "manual" | "inferred" | "session-history";
+  partial: boolean; approximate: boolean;
+  observedQuota?: { at: string; usedPercent: number };
+};
+export type CodexUsageSource = {
+  machine: string;
+  accounts: ReadonlyArray<{
+    since: string; lifetime: CodexSummary;
+    current?: CodexWindow;
+    closed: ReadonlyArray<CodexWindow & { end: string; reason: "scheduled" | "early" | "gap" | "backfill" }>;
+    months: ReadonlyArray<CodexSummary & { month: string }>;
+    spendPerDay?: number; vsPreviousWindowPercent?: number;
+    diagnostics: {
+      unassignedUsd: number; recordingGaps: number; missingWeeklyObservations: number;
+      incompleteEntries: number; unattributedUsage: number; unreadablePaths: number;
+      unverifiedHistory: boolean; nonstandard: boolean;
+    };
+  }>;
+};

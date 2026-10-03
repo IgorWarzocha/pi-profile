@@ -12,8 +12,8 @@ export default {
   },
   // Order is deduplication priority. `host: null` means this machine.
   machines: [
-    { name: "server", host: null, sessionsDir: "~/.pi/agent/sessions" },
-    { name: "desktop", host: process.env.PI_DESKTOP_HOST ?? "desktop", sessionsDir: "~/.pi/agent/sessions" },
-    { name: "laptop", host: process.env.PI_LAPTOP_HOST ?? "laptop", sessionsDir: "~/.pi/agent/sessions" },
+    { name: "server", host: null, sessionsDir: "~/.pi/agent/sessions", codexUsageFile: "~/.pi/agent/codex-usage.json" },
+    { name: "desktop", host: process.env.PI_DESKTOP_HOST ?? "desktop", sessionsDir: "~/.pi/agent/sessions", codexUsageFile: "~/.pi/agent/codex-usage.json" },
+    { name: "laptop", host: process.env.PI_LAPTOP_HOST ?? "laptop", sessionsDir: "~/.pi/agent/sessions", codexUsageFile: "~/.pi/agent/codex-usage.json" },
   ],
 };

@@ -14,6 +14,7 @@ const PUBLIC_PROFILE_KEYS = new Set([
   "languageSummary",
   "insights",
   "recentSessions",
+  "codexUsage",
 ]);
 
 const FORBIDDEN_KEYS = new Set([
@@ -36,6 +37,11 @@ const FORBIDDEN_KEYS = new Set([
   "transcript",
   "uuid",
   "workingDirectory",
+  "accountKey",
+  "accountsByKey",
+  "root",
+  "raw",
+  "warnings",
 ]);
 
 const MAX_PUBLIC_PROFILE_BYTES = 512 * 1024;

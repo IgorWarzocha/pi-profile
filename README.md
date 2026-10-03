@@ -156,12 +156,23 @@ Concurrent aggregations are blocked by `data/profile.json.lock`. If a run is kil
 - Sessions, active days, streaks, duration, and estimated active time
 - Input, output, cache, reasoning, and total tokens
 - Provider-reported cost
+- PCC's recorded Codex spend, model tokens, reset windows and monthly totals
 - Models and reasoning levels
 - Tool calls, results, failures, and compactions
 - Projects derived from working-directory names
 - Courtesy, collaboration, correction, urgency, and profanity patterns in user messages
 
 Pi Profile does not attempt to invent acceptance rates, lines changed, commits, or outcomes that Pi sessions do not reliably provide.
+
+### Codex usage ledgers
+
+For machines running Pi Codex Conversion, set `codexUsageFile: "~/.pi/agent/codex-usage.json"` alongside `sessionsDir` in `profile.config.js`. Aggregation reads PCC's existing version-1 ledger locally or over SSH. It never contacts OpenAI, reads credentials, redeems resets or modifies PCC files. A missing ledger means usage is untracked. An unreadable or invalid ledger stops publication.
+
+The Codex usage section shows each machine and account separately. PCC can import the same session history on multiple machines, so those ledgers cannot safely be summed. Their amounts also overlap the profile's session costs and are not added to lifetime totals. Accounts are numbered only within each machine. Account hashes are never published.
+
+Costs are API equivalents, not subscription charges. PCC records local Codex responses, native compaction and generated cache keepalive, but not every app or device using the account. Quota percentages are timestamped observations, not live readings. Reset boundaries retain PCC's manual, inferred or imported provenance. Approximate windows, incomplete history, missing prices and recording gaps remain visible. Only the latest eight completed windows and twelve calendar months are published.
+
+Banked reset credits and five-hour limits are not persisted in this ledger and are not shown. The profile consumes only JSON PCC already generates.
 
 ## Privacy
 

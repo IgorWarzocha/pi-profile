@@ -5,6 +5,7 @@ data/*.json.tmp
 capsule/lakebed.json
 capsule/shared/*.ts
 capsule/client/model-split.tsx
+capsule/client/codex-usage.tsx
 node_modules/
 
 .pi/

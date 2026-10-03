@@ -120,6 +120,7 @@ export function buildProfile(sessions, collections, options = {}) {
   return {
     schemaVersion: 3,
     generatedAt,
+    codexUsage: options.codexUsage ?? [],
     profile: options.profile ?? { name: "Pi user", handle: "", avatarUrl: "", links: {} },
     headline: {
       lifetimeTokens: totals.totalTokens,

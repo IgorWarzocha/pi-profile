@@ -4,6 +4,7 @@ import { buildProfile, createStreamState, dedupeSessions, finalizeStream, ingest
 import config from "../profile.config.js";
 import { assertPublicProfile } from "./public-profile.js";
 import { retainSessions, withSessionHistory } from "./session-history.js";
+import { collectCodexUsage } from "./codex-usage.js";
 
 const root = new URL("..", import.meta.url).pathname;
 const machines = config.machines.map(({ name, ...machine }) => ({ machine: name, ...machine }));
@@ -33,15 +34,22 @@ async function collect({ machine, host, sessionsDir }) {
 
 await mkdir(`${root}data`, { recursive: true });
 await withSessionHistory(`${root}data/profile.json`, async (previous) => {
+  const generatedAt = new Date().toISOString();
   const collections = await Promise.all(machines.map(async (machine) => {
-    try { return await collect(machine); }
+    try {
+      const results = await Promise.allSettled([collect(machine), collectCodexUsage(machine, generatedAt)]);
+      const failure = results.find((result) => result.status === "rejected");
+      if (failure) throw failure.reason;
+      return { ...results[0].value, codexUsage: results[1].value };
+    }
     catch (error) { console.error(`${machine.machine}: ${String(error.message ?? error)}`); return { machine: machine.machine, ok: false, error: "collection failed", malformedLines: 0, sessions: [] }; }
   }));
   const failed = collections.filter((collection) => !collection.ok);
   if (failed.length && process.env.PI_ALLOW_PARTIAL !== "1") throw new Error(`Refusing to publish a partial profile; unavailable: ${failed.map((item) => item.machine).join(", ")}`);
   const machineOrder = machines.map(({ machine }) => machine);
   const sessions = retainSessions(previous, dedupeSessions(collections, machineOrder));
-  const profile = assertPublicProfile(buildProfile(sessions, collections, { machineOrder, profile: config.profile }));
+  const codexUsage = collections.map((item) => item.codexUsage ?? { machine: item.machine, accounts: [] });
+  const profile = assertPublicProfile(buildProfile(sessions, collections, { machineOrder, profile: config.profile, generatedAt, codexUsage }));
   return { ...profile, sessions };
 }, async (snapshot) => {
   const { sessions: localSessions, ...profile } = snapshot;

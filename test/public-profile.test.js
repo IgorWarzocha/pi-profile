@@ -19,6 +19,7 @@ function emptyPublicProfile() {
     languageSummary: {},
     insights: {},
     recentSessions: [],
+    codexUsage: [],
   };
 }
 
@@ -36,6 +37,9 @@ test("rejects schema expansion and private session fields", () => {
     () => assertPublicProfile({ ...emptyPublicProfile(), insights: { cwd: "/home/igorw/Work" } }),
     /forbidden field profile\.insights\.cwd/,
   );
+  for (const key of ["accountKey", "root", "raw", "warnings"]) {
+    assert.throws(() => assertPublicProfile({ ...emptyPublicProfile(), codexUsage: [{ [key]: "private" }] }), /forbidden field/);
+  }
 });
 
 test("rejects project names that still look like paths", () => {
