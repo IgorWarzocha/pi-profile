@@ -13,5 +13,6 @@
 - Collection and profile contracts: `src/server-aggregate.js`, `src/profile-lib.js`.
 - Language classifiers: `src/analyzer.js` with regression cases in `test/analyzer.test.js`.
 - Preserve overview-first, deferred-detail loading in both UIs.
+- Keep the profile sparse. Fit new metrics to the existing hierarchy; collection bookkeeping belongs in CLI output and snapshots, not interface commentary.
 - Lakebed cannot import outside `capsule/`; use the preparation script's generated copies, not a second collection path.
 - Use `npm run check` as the umbrella gate before dual publication. The binding requires clean source and stages only its two generated public snapshots.

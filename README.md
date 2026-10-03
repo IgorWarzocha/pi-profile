@@ -168,9 +168,9 @@ Pi Profile does not attempt to invent acceptance rates, lines changed, commits, 
 
 For machines running Pi Codex Conversion, set `codexUsageFile: "~/.pi/agent/codex-usage.json"` alongside `sessionsDir` in `profile.config.js`. Aggregation reads PCC's existing version-1 ledger locally or over SSH. It never contacts OpenAI, reads credentials, redeems resets or modifies PCC files. A missing ledger means usage is untracked. An unreadable or invalid ledger stops publication.
 
-The Codex usage section shows each machine and account separately. PCC can import the same session history on multiple machines, so those ledgers cannot safely be summed. Their amounts also overlap the profile's session costs and are not added to lifetime totals. Accounts are numbered only within each machine. Account hashes are never published.
+The Codex section shows window spend, model usage and the next reset, with a separate view for each machine. Without a recorded window, it shows recorded model totals. PCC can import the same session history on multiple machines, so those ledgers cannot safely be summed. Their amounts also overlap the profile's session costs and are not added to lifetime totals. Account hashes are never published.
 
-Costs are API equivalents, not subscription charges. PCC records local Codex responses, native compaction and generated cache keepalive, but not every app or device using the account. Quota percentages are timestamped observations, not live readings. Reset boundaries retain PCC's manual, inferred or imported provenance. Approximate windows, incomplete history, missing prices and recording gaps remain visible. Only the latest eight completed windows and twelve calendar months are published.
+Costs are API equivalents, not subscription charges. PCC records local Codex responses, native compaction and generated cache keepalive, but not every app or device using the account. Coverage diagnostics, timestamped quota observations, the latest eight completed windows and twelve calendar months remain in the public JSON snapshot, not in the interface.
 
 Banked reset credits and five-hour limits are not persisted in this ledger and are not shown. The profile consumes only JSON PCC already generates.
 
