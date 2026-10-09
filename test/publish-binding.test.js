@@ -15,8 +15,8 @@ function harness({ failCommand, failSites = false, yielded = false } = {}) {
       assert.equal(session_id, 7);
       return { output: "validated", exit_code: 0 };
     },
-    async sites(input) {
-      const call = JSON.parse(input);
+    async sites(call) {
+      assert.equal(typeof call, "object");
       calls.push(call);
       if (failSites) return JSON.stringify({ ok: false, error: "unavailable" });
       return JSON.stringify({ ok: true, result: call.resource === "version"

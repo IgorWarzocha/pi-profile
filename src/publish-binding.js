@@ -16,9 +16,9 @@ export function createPiProfileBinding(tools, projectDir) {
   }
 
   async function sites(resource, action, params = {}) {
-    const response = JSON.parse(await tools.sites(JSON.stringify({
+    const response = JSON.parse(await tools.sites({
       resource, action, params: { project_dir: projectDir, ...params },
-    })));
+    }));
     if (!response.ok) throw new Error(JSON.stringify(response));
     return response.result;
   }
