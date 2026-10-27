@@ -18,9 +18,9 @@ function harness({ failCommand, failSites = false, yielded = false } = {}) {
     async sites(call) {
       assert.equal(typeof call, "object");
       calls.push(call);
-      if (failSites) return JSON.stringify({ ok: false, error: "unavailable" });
-      return JSON.stringify({ ok: true, result: call.resource === "version"
-        ? { id: "opaque-version" } : { id: "opaque-deployment", status: "ready" } });
+      if (failSites) return JSON.stringify({ error: "unavailable" });
+      return JSON.stringify(call.resource === "version"
+        ? { id: "opaque-version" } : { id: "opaque-deployment", status: "ready" });
     },
   };
   return { commands, calls, binding: createPiProfileBinding(tools, "/project") };
